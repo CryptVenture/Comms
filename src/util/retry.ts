@@ -350,3 +350,199 @@ export function delay(ms: number, signal?: AbortSignal): Promise<void> {
     signal?.addEventListener('abort', onAbort, { once: true })
   })
 }
+
+/**
+ * Extracts an HTTP status code from an error if available
+ *
+ * Supports errors with a statusCode property (like RequestError, NetworkError)
+ * or errors with a response.status property (like fetch errors)
+ *
+ * @param error - The error to extract status code from
+ * @returns The status code if found, undefined otherwise
+ */
+export function getStatusCodeFromError(error: unknown): number | undefined {
+  if (error === null || typeof error !== 'object') {
+    return undefined
+  }
+
+  // Check for statusCode property (RequestError, NetworkError)
+  if ('statusCode' in error && typeof error.statusCode === 'number') {
+    return error.statusCode
+  }
+
+  // Check for status property
+  if ('status' in error && typeof error.status === 'number') {
+    return error.status
+  }
+
+  // Check for response.status (fetch-style errors)
+  if ('response' in error && error.response !== null && typeof error.response === 'object') {
+    const response = error.response as Record<string, unknown>
+    if ('status' in response && typeof response.status === 'number') {
+      return response.status
+    }
+  }
+
+  return undefined
+}
+
+/**
+ * Wraps an async function with retry logic using exponential backoff
+ *
+ * This function executes the provided async function and automatically retries
+ * on failure according to the configured retry options. It's generic and works
+ * with any async operation, not just HTTP requests.
+ *
+ * Key features:
+ * - Exponential backoff with optional jitter to prevent thundering herd
+ * - Configurable retry conditions via shouldRetry callback or status codes
+ * - AbortSignal support for cancellation during retries
+ * - onRetry callback for logging and monitoring
+ * - Preserves the original error if all retries fail
+ *
+ * @typeParam T - The return type of the async function
+ * @param fn - The async function to execute with retry logic
+ * @param options - Configuration options for retry behavior
+ * @returns A promise that resolves with the function result or rejects with the last error
+ * @throws The last error encountered if all retries are exhausted or if the error is not retryable
+ *
+ * @example
+ * ```typescript
+ * // Basic usage - retry a function up to 3 times
+ * const result = await withRetry(
+ *   () => fetchData('/api/data'),
+ *   { maxRetries: 3 }
+ * )
+ *
+ * // With custom retry conditions
+ * const result = await withRetry(
+ *   () => fetchData('/api/data'),
+ *   {
+ *     maxRetries: 5,
+ *     baseDelay: 500,
+ *     shouldRetry: ({ error, statusCode }) => {
+ *       // Only retry on rate limit or server errors
+ *       return statusCode === 429 || (statusCode !== undefined && statusCode >= 500)
+ *     }
+ *   }
+ * )
+ *
+ * // With abort signal for timeout
+ * const controller = new AbortController()
+ * setTimeout(() => controller.abort(), 30000)
+ *
+ * const result = await withRetry(
+ *   () => fetchData('/api/data'),
+ *   {
+ *     maxRetries: 3,
+ *     signal: controller.signal,
+ *     onRetry: ({ attempt, error, delay }) => {
+ *       console.log(`Retry ${attempt} in ${delay}ms: ${error.message}`)
+ *     }
+ *   }
+ * )
+ *
+ * // Disable retries (maxRetries: 0)
+ * const result = await withRetry(
+ *   () => fetchData('/api/data'),
+ *   { maxRetries: 0 }
+ * )
+ * ```
+ */
+export async function withRetry<T>(
+  fn: () => Promise<T>,
+  options: RetryOptions = {}
+): Promise<T> {
+  const opts = getRetryOptionsWithDefaults(options)
+
+  // Attempt 0 is the initial attempt, retries start at attempt 1
+  let lastError: Error | undefined
+
+  for (let attempt = 0; attempt <= opts.maxRetries; attempt++) {
+    // Check if aborted before attempting
+    if (opts.signal?.aborted) {
+      const error = new Error('Operation aborted')
+      error.name = 'AbortError'
+      throw error
+    }
+
+    try {
+      return await fn()
+    } catch (error) {
+      // Ensure we have an Error object
+      const errorObj = error instanceof Error ? error : new Error(String(error))
+      lastError = errorObj
+
+      // If this is an AbortError, don't retry - propagate immediately
+      if (errorObj.name === 'AbortError') {
+        throw errorObj
+      }
+
+      // Check if we've exhausted all retries
+      if (attempt >= opts.maxRetries) {
+        throw lastError
+      }
+
+      // Determine if we should retry
+      const statusCode = getStatusCodeFromError(error)
+      const shouldRetryError = determineShouldRetry(errorObj, statusCode, attempt + 1, opts)
+
+      if (!shouldRetryError) {
+        throw lastError
+      }
+
+      // Calculate delay for next retry (attempt + 1 because calculateBackoff is 1-based for retries)
+      const retryDelay = calculateBackoff(attempt + 1, {
+        baseDelay: opts.baseDelay,
+        maxDelay: opts.maxDelay,
+        jitter: opts.jitter,
+        maxJitter: opts.maxJitter,
+      })
+
+      // Call onRetry callback if provided
+      if (opts.onRetry) {
+        opts.onRetry({
+          attempt: attempt + 1,
+          error: lastError,
+          delay: retryDelay,
+        })
+      }
+
+      // Wait before retrying
+      await delay(retryDelay, opts.signal)
+    }
+  }
+
+  // This should never be reached, but TypeScript needs it
+  throw lastError ?? new Error('Retry failed')
+}
+
+/**
+ * Determines whether an error should trigger a retry based on configuration
+ *
+ * @param error - The error that occurred
+ * @param statusCode - HTTP status code if available
+ * @param attempt - Current attempt number (1-based)
+ * @param options - Retry options with defaults applied
+ * @returns true if the operation should be retried
+ */
+function determineShouldRetry(
+  error: Error,
+  statusCode: number | undefined,
+  attempt: number,
+  options: ReturnType<typeof getRetryOptionsWithDefaults>
+): boolean {
+  // If a custom shouldRetry callback is provided, use it
+  if (options.shouldRetry) {
+    return options.shouldRetry({ attempt, error, statusCode })
+  }
+
+  // Default behavior: retry on retryable status codes
+  // Also retry if there's no status code (network errors, etc.)
+  if (statusCode !== undefined) {
+    return isRetryableStatusCode(statusCode, options.retryableStatusCodes)
+  }
+
+  // For errors without status codes (network errors, timeouts, etc.), retry by default
+  return true
+}
