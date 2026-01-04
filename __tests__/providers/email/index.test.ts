@@ -1,5 +1,6 @@
 import { vi, test, expect } from 'vitest'
 import CommsSdk from '../../../src'
+import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
   default: {
@@ -74,6 +75,38 @@ test('email logger provider.', async () => {
     status: 'success',
     channels: {
       email: { id: expect.stringContaining('id-'), providerId: 'email-logger-provider' },
+    },
+  })
+})
+
+test('email postmark provider.', async () => {
+  mockResponse(
+    200,
+    JSON.stringify({ MessageID: 'postmark-message-id', ErrorCode: 0, Message: 'OK' })
+  )
+  const sdk = new CommsSdk({
+    channels: {
+      email: {
+        providers: [
+          {
+            type: 'postmark',
+            serverToken: 'test-server-token',
+          },
+        ],
+      },
+    },
+  })
+  const result = await sdk.send(request)
+  expect(mockHttp).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      hostname: 'api.postmarkapp.com',
+      path: '/email',
+    })
+  )
+  expect(result).toEqual({
+    status: 'success',
+    channels: {
+      email: { id: 'postmark-message-id', providerId: 'email-postmark-provider' },
     },
   })
 })
