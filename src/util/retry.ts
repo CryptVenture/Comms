@@ -278,3 +278,75 @@ export function calculateBackoff(attempt: number, options: BackoffOptions = {}):
 
   return cappedDelay
 }
+
+/**
+ * Creates a promise that resolves after a specified delay, with support for cancellation via AbortSignal
+ *
+ * This is useful for implementing retry delays that can be cancelled when the overall operation
+ * is aborted (e.g., due to timeout or user cancellation).
+ *
+ * @param ms - The delay duration in milliseconds
+ * @param signal - Optional AbortSignal to cancel the delay
+ * @returns A promise that resolves after the delay or rejects if aborted
+ * @throws {Error} Throws with name 'AbortError' if the signal is aborted
+ *
+ * @example
+ * ```typescript
+ * // Simple delay
+ * await delay(1000)
+ *
+ * // Delay with cancellation support
+ * const controller = new AbortController()
+ *
+ * // Cancel after 500ms
+ * setTimeout(() => controller.abort(), 500)
+ *
+ * try {
+ *   await delay(1000, controller.signal)
+ * } catch (error) {
+ *   if (error.name === 'AbortError') {
+ *     console.log('Delay was cancelled')
+ *   }
+ * }
+ *
+ * // Use in retry loop
+ * async function retryOperation() {
+ *   const controller = new AbortController()
+ *   for (let attempt = 1; attempt <= 3; attempt++) {
+ *     try {
+ *       return await doSomething()
+ *     } catch (error) {
+ *       const backoff = calculateBackoff(attempt)
+ *       await delay(backoff, controller.signal)
+ *     }
+ *   }
+ * }
+ * ```
+ */
+export function delay(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve, reject) => {
+    // If already aborted, reject immediately
+    if (signal?.aborted) {
+      const error = new Error('Delay aborted')
+      error.name = 'AbortError'
+      reject(error)
+      return
+    }
+
+    const timeoutId = setTimeout(() => {
+      // Clean up abort listener before resolving
+      signal?.removeEventListener('abort', onAbort)
+      resolve()
+    }, ms)
+
+    function onAbort() {
+      clearTimeout(timeoutId)
+      const error = new Error('Delay aborted')
+      error.name = 'AbortError'
+      reject(error)
+    }
+
+    // Listen for abort signal
+    signal?.addEventListener('abort', onAbort, { once: true })
+  })
+}
