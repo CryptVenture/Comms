@@ -66,6 +66,27 @@ export interface SuccessNotificationStatus {
 }
 
 /**
+ * Discriminated type for error notification responses.
+ * Narrows NotificationStatus to indicate a failed result with the errors field always present.
+ */
+export interface ErrorNotificationStatus {
+  /**
+   * Status is always 'error' for error responses
+   */
+  status: 'error'
+
+  /**
+   * Channels are not present on error responses
+   */
+  channels?: undefined
+
+  /**
+   * Errors for failed channels (always present on error)
+   */
+  errors: Partial<Record<ChannelType, Error>>
+}
+
+/**
  * Provider send result
  */
 export interface ProviderSendResult {
