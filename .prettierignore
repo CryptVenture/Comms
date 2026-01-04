@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+lib/
+coverage/
+
+# Git worktrees
+.worktrees/
+
+# Documentation (formatted separately)
+docs/
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Legacy
+flow/
+
+# Backup files
+*.bak
+

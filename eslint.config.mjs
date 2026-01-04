@@ -99,6 +99,7 @@ export default [
       'docs/**',
       'examples/**/*.js',
       'flow/**',
+      '.worktrees/**',
     ],
   },
 ]
