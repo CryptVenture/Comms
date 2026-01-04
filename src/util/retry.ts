@@ -186,3 +186,95 @@ export function isRetryableStatusCode(
   }
   return retryableStatusCodes.includes(statusCode)
 }
+
+/**
+ * Options for calculateBackoff function
+ */
+export interface BackoffOptions {
+  /**
+   * Base delay in milliseconds
+   * @default 1000
+   */
+  baseDelay?: number
+
+  /**
+   * Maximum delay in milliseconds
+   * @default 30000
+   */
+  maxDelay?: number
+
+  /**
+   * Whether to add random jitter to the delay
+   * @default true
+   */
+  jitter?: boolean
+
+  /**
+   * Maximum jitter in milliseconds to add to the delay
+   * @default 1000
+   */
+  maxJitter?: number
+}
+
+/**
+ * Calculates the delay for a retry attempt using exponential backoff with optional jitter
+ *
+ * The formula is: min(maxDelay, baseDelay * 2^attempt) + random jitter
+ *
+ * Exponential backoff increases wait times between retries to reduce load on failing services.
+ * Jitter adds randomization to prevent the "thundering herd" problem where many clients
+ * retry simultaneously after a service recovers.
+ *
+ * @param attempt - The current attempt number (1-based: first retry is attempt 1)
+ * @param options - Configuration options for the backoff calculation
+ * @returns The calculated delay in milliseconds
+ *
+ * @example
+ * ```typescript
+ * // First retry with defaults: ~1000ms base + up to 1000ms jitter
+ * calculateBackoff(1) // Returns ~1000-2000ms
+ *
+ * // Second retry: ~2000ms base + jitter
+ * calculateBackoff(2) // Returns ~2000-3000ms
+ *
+ * // Third retry: ~4000ms base + jitter
+ * calculateBackoff(3) // Returns ~4000-5000ms
+ *
+ * // Without jitter (for predictable testing)
+ * calculateBackoff(1, { jitter: false }) // Returns exactly 1000ms
+ *
+ * // Custom configuration
+ * calculateBackoff(2, {
+ *   baseDelay: 500,
+ *   maxDelay: 10000,
+ *   jitter: true,
+ *   maxJitter: 200
+ * }) // Returns ~1000-1200ms
+ * ```
+ */
+export function calculateBackoff(attempt: number, options: BackoffOptions = {}): number {
+  const {
+    baseDelay = DEFAULT_RETRY_OPTIONS.baseDelay,
+    maxDelay = DEFAULT_RETRY_OPTIONS.maxDelay,
+    jitter = DEFAULT_RETRY_OPTIONS.jitter,
+    maxJitter = DEFAULT_RETRY_OPTIONS.maxJitter,
+  } = options
+
+  // Ensure attempt is at least 1 and calculate exponential delay
+  // For attempt 1: baseDelay * 2^0 = baseDelay
+  // For attempt 2: baseDelay * 2^1 = 2 * baseDelay
+  // For attempt 3: baseDelay * 2^2 = 4 * baseDelay
+  const normalizedAttempt = Math.max(1, attempt)
+  const exponentialDelay = baseDelay * Math.pow(2, normalizedAttempt - 1)
+
+  // Cap at maxDelay
+  const cappedDelay = Math.min(maxDelay, exponentialDelay)
+
+  // Add jitter if enabled
+  if (jitter && maxJitter > 0) {
+    const jitterAmount = Math.random() * maxJitter
+    return cappedDelay + jitterAmount
+  }
+
+  return cappedDelay
+}
