@@ -15,7 +15,7 @@ const request = {
   },
 }
 
-test.only('socket', async () => {
+test('socket', async () => {
   let socketCalled = false
   const sdk = new CommsSdk({
     channels: {
