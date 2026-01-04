@@ -66,11 +66,12 @@ test('Sender should send all notifications.', async () => {
   expect(providers.email[0].send).toBeCalledWith({ ...metadata, ...request.email })
   expect(logger.warn).toBeCalledWith('No provider registered for channel "push". Using logger.')
   expect(logger.info).toBeCalledWith('[PUSH] Sent by "push-logger-provider":')
+  // Logger now redacts PII before logging
   expect(logger.info).toBeCalledWith({
     id: '24',
-    registrationToken: 'xxxxx',
-    title: 'Hi John',
-    body: 'Hello John! How are you?',
+    registrationToken: '[REDACTED TOKEN]',
+    title: '[REDACTED TEXT]',
+    body: '[REDACTED TEXT]',
   })
   expect(logger.warn).toBeCalledWith(
     'webpush-provider',

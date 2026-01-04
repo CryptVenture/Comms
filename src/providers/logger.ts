@@ -6,6 +6,7 @@
  */
 
 import logger from '../util/logger'
+import { redactPii } from '../util/redact-pii'
 import { ProviderError } from '../types/errors'
 import type { ChannelType } from '../types'
 import type { RequestType } from './index'
@@ -61,7 +62,15 @@ export default class LoggerProvider<TRequest extends RequestType = RequestType> 
   }
 
   /**
-   * Logs a notification request
+   * Logs a notification request with PII redaction
+   *
+   * Redacts sensitive information before logging to ensure GDPR/CCPA compliance:
+   * - Email addresses (preserves domain)
+   * - Phone numbers (preserves last 4 digits)
+   * - Message content (text, html, subject, body)
+   * - Tokens and API keys
+   * - URLs (keeps domain only)
+   * - File content and buffers
    *
    * @param request - The notification request to log
    * @returns A randomly generated ID simulating a successful send
@@ -75,6 +84,7 @@ export default class LoggerProvider<TRequest extends RequestType = RequestType> 
    *   to: '+0987654321',
    *   text: 'Hello World'
    * })
+   * // Logs: { from: '+1***7890', to: '+0***4321', text: '[REDACTED TEXT]' }
    * // Returns: "id-123456789"
    * ```
    */
@@ -83,8 +93,11 @@ export default class LoggerProvider<TRequest extends RequestType = RequestType> 
       // Log the channel and provider ID
       logger.info(`[${this.channel.toUpperCase()}] Sent by "${this.id}":`)
 
-      // Log the request details
-      logger.info(request)
+      // Redact PII before logging
+      const redactedRequest = redactPii(request)
+
+      // Log the redacted request details
+      logger.info(redactedRequest)
 
       // Generate a random ID to simulate a successful send
       const randomId = `id-${Math.round(Math.random() * 1000000000)}`
