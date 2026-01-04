@@ -102,9 +102,10 @@ export interface ProviderSendResult {
 }
 
 /**
- * Type guard for successful response
+ * Type guard for successful response.
+ * Returns a type predicate that narrows NotificationStatus to SuccessNotificationStatus.
  */
-export function isSuccessResponse(status: NotificationStatus): boolean {
+export function isSuccessResponse(status: NotificationStatus): status is SuccessNotificationStatus {
   return status.status === 'success'
 }
 
