@@ -59,6 +59,7 @@
 import strategyFallback from './fallback'
 import strategyNoFallback from './no-fallback'
 import strategyRoundRobin from './roundrobin'
+import strategyWeighted from './weighted'
 import type { MultiProviderStrategyType } from '../../types'
 import type { ChannelConfig } from '../../types/config'
 import type { StrategyFunction } from '../../types/strategies'
@@ -70,8 +71,9 @@ const providerStrategies: Record<MultiProviderStrategyType, StrategyFunction> = 
   fallback: strategyFallback,
   'no-fallback': strategyNoFallback,
   roundrobin: strategyRoundRobin,
-  // TODO: Replace with actual weighted strategy implementation in subtask 1.3/1.4
-  weighted: strategyFallback,
+  // Type assertion required because WeightedStrategyFunction expects WeightedProvider
+  // (with weight property). The strategy validates weights at runtime.
+  weighted: strategyWeighted as unknown as StrategyFunction,
 }
 
 /**
@@ -193,7 +195,7 @@ export default function factory(channels: Record<string, ChannelConfig>): Strate
 /**
  * Export built-in strategies for direct use
  */
-export { strategyFallback, strategyNoFallback, strategyRoundRobin }
+export { strategyFallback, strategyNoFallback, strategyRoundRobin, strategyWeighted }
 
 /**
  * Export strategy names for validation
