@@ -18,7 +18,7 @@ export type ChannelType = 'email' | 'sms' | 'push' | 'voice' | 'webpush' | 'slac
 /**
  * Multi-provider strategy types
  */
-export type MultiProviderStrategyType = 'fallback' | 'roundrobin' | 'no-fallback'
+export type MultiProviderStrategyType = 'fallback' | 'roundrobin' | 'no-fallback' | 'weighted'
 
 /**
  * Logger instance type (Winston)

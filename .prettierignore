@@ -5,6 +5,7 @@ node_modules/
 dist/
 lib/
 coverage/
+.auto-claude-status
 
 # Git worktrees
 .worktrees/
