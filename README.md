@@ -33,30 +33,30 @@ const comms = new CommsSdk({
   channels: {
     email: { providers: [{ type: 'sendgrid', apiKey: process.env.SENDGRID_KEY }] },
     sms: { providers: [{ type: 'twilio', accountSid: '...', authToken: '...' }] },
-    push: { providers: [{ type: 'fcm', id: 'your-fcm-key' }] }
-  }
+    push: { providers: [{ type: 'fcm', id: 'your-fcm-key' }] },
+  },
 })
 
 // Send notifications with intelligent fallback
 await comms.send({
   email: { to: 'user@example.com', subject: 'Welcome!', html: '<h1>Hello!</h1>' },
   sms: { to: '+1234567890', text: 'Welcome to WebVentures!' },
-  push: { registrationToken: 'device-token', title: 'Welcome!', body: 'Get started' }
+  push: { registrationToken: 'device-token', title: 'Welcome!', body: 'Get started' },
 })
 ```
 
 ### Key Benefits
 
-| Feature | Description |
-|---------|-------------|
-| **🎯 Unified API** | Single interface for all notification channels |
-| **🛡️ Type-Safe** | Full TypeScript support with comprehensive IntelliSense |
-| **⚡ Multi-Provider** | Built-in failover & load balancing across 40+ providers |
-| **🚀 Framework-First** | Optimized for Next.js 16+, React 19, React Native, Expo |
-| **🔧 Production-Ready** | Battle-tested error handling, logging, and provider abstraction |
-| **🎨 Developer-Friendly** | Local testing tools, extensive docs, and real-world examples |
-| **📦 Tree-Shakeable** | Modular exports for optimal bundle size |
-| **🔌 Extensible** | Custom providers and strategies support |
+| Feature                   | Description                                                     |
+| ------------------------- | --------------------------------------------------------------- |
+| **🎯 Unified API**        | Single interface for all notification channels                  |
+| **🛡️ Type-Safe**          | Full TypeScript support with comprehensive IntelliSense         |
+| **⚡ Multi-Provider**     | Built-in failover & load balancing across 40+ providers         |
+| **🚀 Framework-First**    | Optimized for Next.js 16+, React 19, React Native, Expo         |
+| **🔧 Production-Ready**   | Battle-tested error handling, logging, and provider abstraction |
+| **🎨 Developer-Friendly** | Local testing tools, extensive docs, and real-world examples    |
+| **📦 Tree-Shakeable**     | Modular exports for optimal bundle size                         |
+| **🔌 Extensible**         | Custom providers and strategies support                         |
 
 ---
 
@@ -69,24 +69,28 @@ await comms.send({
 <td width="25%" align="center">
 
 ### 📧 Email
+
 SMTP, SendGrid, AWS SES, Mailgun, Mandrill, SparkPost, Sendmail
 
 </td>
 <td width="25%" align="center">
 
 ### 💬 SMS
+
 Twilio, Vonage, Plivo, Infobip, OVH, Callr, Clickatell, 46elks, Seven
 
 </td>
 <td width="25%" align="center">
 
 ### 📱 Push
+
 APNs (iOS), FCM (Android/iOS), WNS (Windows), ADM (Amazon)
 
 </td>
 <td width="25%" align="center">
 
 ### 🔊 Voice
+
 Twilio Voice with TwiML support
 
 </td>
@@ -95,24 +99,28 @@ Twilio Voice with TwiML support
 <td width="25%" align="center">
 
 ### 🌐 Webpush
+
 Web Push with VAPID authentication
 
 </td>
 <td width="25%" align="center">
 
 ### 💼 Slack
+
 Webhook integration with rich formatting
 
 </td>
 <td width="25%" align="center">
 
 ### 💚 WhatsApp
+
 Infobip WhatsApp Business API
 
 </td>
 <td width="25%" align="center">
 
 ### 🎯 Custom
+
 Build your own providers
 
 </td>
@@ -129,12 +137,12 @@ Build your own providers
 
 ### 🔄 Multi-Provider Strategies
 
-| Strategy | Description | Use Case |
-|----------|-------------|----------|
-| **Fallback** | Automatic failover to backup providers | High availability, 99.9% uptime |
-| **Round-robin** | Load balancing across providers | Cost optimization, rate limiting |
-| **No-fallback** | Single provider with immediate errors | Testing, debugging |
-| **Custom** | Define your own selection logic | Geographic routing, A/B testing |
+| Strategy        | Description                            | Use Case                         |
+| --------------- | -------------------------------------- | -------------------------------- |
+| **Fallback**    | Automatic failover to backup providers | High availability, 99.9% uptime  |
+| **Round-robin** | Load balancing across providers        | Cost optimization, rate limiting |
+| **No-fallback** | Single provider with immediate errors  | Testing, debugging               |
+| **Custom**      | Define your own selection logic        | Geographic routing, A/B testing  |
 
 ---
 
@@ -176,12 +184,14 @@ import CommsSdk from '@webventures/comms'
 const comms = new CommsSdk({
   channels: {
     email: {
-      providers: [{
-        type: 'sendgrid',
-        apiKey: process.env.SENDGRID_API_KEY
-      }]
-    }
-  }
+      providers: [
+        {
+          type: 'sendgrid',
+          apiKey: process.env.SENDGRID_API_KEY,
+        },
+      ],
+    },
+  },
 })
 
 const result = await comms.send({
@@ -189,8 +199,8 @@ const result = await comms.send({
     from: 'noreply@example.com',
     to: 'user@example.com',
     subject: 'Welcome to WebVentures!',
-    html: '<h1>Hello!</h1><p>Thanks for signing up.</p>'
-  }
+    html: '<h1>Hello!</h1><p>Thanks for signing up.</p>',
+  },
 })
 
 console.log(result)
@@ -207,17 +217,19 @@ const comms = new CommsSdk({
       providers: [
         { type: 'sendgrid', apiKey: process.env.SENDGRID_KEY }, // Primary
         { type: 'ses', region: 'us-east-1', accessKeyId: '...', secretAccessKey: '...' }, // Backup
-        { type: 'mailgun', apiKey: '...', domainName: 'mg.example.com' } // Fallback
-      ]
+        { type: 'mailgun', apiKey: '...', domainName: 'mg.example.com' }, // Fallback
+      ],
     },
     sms: {
-      providers: [{
-        type: 'twilio',
-        accountSid: process.env.TWILIO_SID,
-        authToken: process.env.TWILIO_TOKEN
-      }]
-    }
-  }
+      providers: [
+        {
+          type: 'twilio',
+          accountSid: process.env.TWILIO_SID,
+          authToken: process.env.TWILIO_TOKEN,
+        },
+      ],
+    },
+  },
 })
 
 // If SendGrid fails, automatically tries SES, then Mailgun
@@ -226,13 +238,13 @@ await comms.send({
     from: 'alerts@example.com',
     to: 'user@example.com',
     subject: 'Critical Alert',
-    text: 'Your account requires immediate attention.'
+    text: 'Your account requires immediate attention.',
   },
   sms: {
     from: '+1234567890',
     to: '+0987654321',
-    text: 'Critical alert - check your email'
-  }
+    text: 'Critical alert - check your email',
+  },
 })
 ```
 
@@ -248,9 +260,9 @@ export async function sendWelcomeEmail(email: string) {
   const comms = createNextJSComms({
     channels: {
       email: {
-        providers: [{ type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY! }]
-      }
-    }
+        providers: [{ type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY! }],
+      },
+    },
   })
 
   return await comms.send({
@@ -258,8 +270,8 @@ export async function sendWelcomeEmail(email: string) {
       from: 'noreply@example.com',
       to: email,
       subject: 'Welcome!',
-      html: '<h1>Thanks for joining!</h1>'
-    }
+      html: '<h1>Thanks for joining!</h1>',
+    },
   })
 }
 ```
@@ -290,12 +302,14 @@ import { createReactNativeComms } from '@webventures/comms/adapters'
 const comms = createReactNativeComms({
   channels: {
     push: {
-      providers: [{
-        type: 'fcm',
-        id: process.env.FCM_SERVER_KEY
-      }]
-    }
-  }
+      providers: [
+        {
+          type: 'fcm',
+          id: process.env.FCM_SERVER_KEY,
+        },
+      ],
+    },
+  },
 })
 
 await comms.send({
@@ -307,9 +321,9 @@ await comms.send({
     sound: 'default',
     custom: {
       messageId: '123',
-      type: 'chat'
-    }
-  }
+      type: 'chat',
+    },
+  },
 })
 ```
 
@@ -323,15 +337,18 @@ await comms.send({
 // lib/comms.ts - Reusable SDK instance
 import { withComms } from '@webventures/comms/adapters'
 
-export const sendNotification = withComms(async (comms, options) => {
-  return await comms.send(options)
-}, {
-  channels: {
-    email: {
-      providers: [{ type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY! }]
-    }
+export const sendNotification = withComms(
+  async (comms, options) => {
+    return await comms.send(options)
+  },
+  {
+    channels: {
+      email: {
+        providers: [{ type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY! }],
+      },
+    },
   }
-})
+)
 ```
 
 ```typescript
@@ -346,8 +363,8 @@ export async function POST(request: Request) {
       from: 'noreply@example.com',
       to: email,
       subject: 'Notification',
-      text: message
-    }
+      text: message,
+    },
   })
 
   return Response.json(result)
@@ -363,12 +380,14 @@ import * as Notifications from 'expo-notifications'
 const comms = createExpoComms({
   channels: {
     push: {
-      providers: [{
-        type: 'fcm',
-        id: process.env.EXPO_FCM_KEY
-      }]
-    }
-  }
+      providers: [
+        {
+          type: 'fcm',
+          id: process.env.EXPO_FCM_KEY,
+        },
+      ],
+    },
+  },
 })
 
 // Get push token
@@ -379,8 +398,8 @@ await comms.send({
   push: {
     registrationToken: token,
     title: 'Expo Notification',
-    body: 'Hello from WebVentures Comms!'
-  }
+    body: 'Hello from WebVentures Comms!',
+  },
 })
 ```
 
@@ -393,8 +412,8 @@ import { createNodeComms } from '@webventures/comms/adapters'
 const app = express()
 const comms = createNodeComms({
   channels: {
-    email: { providers: [{ type: 'smtp', host: 'smtp.gmail.com', port: 587 }] }
-  }
+    email: { providers: [{ type: 'smtp', host: 'smtp.gmail.com', port: 587 }] },
+  },
 })
 
 app.post('/api/send-email', async (req, res) => {
@@ -403,8 +422,8 @@ app.post('/api/send-email', async (req, res) => {
       from: 'noreply@example.com',
       to: req.body.email,
       subject: 'Hello',
-      text: 'Your message here'
-    }
+      text: 'Your message here',
+    },
   })
 
   res.json(result)
@@ -431,14 +450,14 @@ app.listen(3000)
 
 ### Quick Links
 
-| Topic | Link |
-|-------|------|
-| Error Handling | [docs/README.md#error-handling](./docs/README.md#error-handling) |
+| Topic                     | Link                                                                                   |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| Error Handling            | [docs/README.md#error-handling](./docs/README.md#error-handling)                       |
 | Multi-Provider Strategies | [docs/README.md#multi-provider-strategies](./docs/README.md#multi-provider-strategies) |
-| TypeScript Types | [docs/API.md#types](./docs/API.md#types) |
-| Custom Providers | [docs/PROVIDERS.md#custom-providers](./docs/PROVIDERS.md#custom-providers) |
-| Production Patterns | [docs/EXAMPLES.md#production](./docs/EXAMPLES.md#production) |
-| Testing Guide | [docs/EXAMPLES.md#testing](./docs/EXAMPLES.md#testing) |
+| TypeScript Types          | [docs/API.md#types](./docs/API.md#types)                                               |
+| Custom Providers          | [docs/PROVIDERS.md#custom-providers](./docs/PROVIDERS.md#custom-providers)             |
+| Production Patterns       | [docs/EXAMPLES.md#production](./docs/EXAMPLES.md#production)                           |
+| Testing Guide             | [docs/EXAMPLES.md#testing](./docs/EXAMPLES.md#testing)                                 |
 
 ---
 
@@ -453,14 +472,16 @@ await comms.send({
     to: 'customer@example.com',
     subject: 'Invoice #12345',
     html: '<h1>Your Invoice</h1><p>Please find attached.</p>',
-    attachments: [{
-      filename: 'invoice.pdf',
-      content: pdfBuffer,
-      contentType: 'application/pdf'
-    }],
+    attachments: [
+      {
+        filename: 'invoice.pdf',
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ],
     cc: ['accounting@example.com'],
-    bcc: ['archive@example.com']
-  }
+    bcc: ['archive@example.com'],
+  },
 })
 ```
 
@@ -472,8 +493,8 @@ await comms.send({
     from: '+1234567890',
     to: '+0987654321',
     text: '您的验证码是: 123456',
-    type: 'unicode'
-  }
+    type: 'unicode',
+  },
 })
 ```
 
@@ -494,9 +515,9 @@ await comms.send({
     custom: {
       chatId: '123',
       senderId: '456',
-      type: 'chat_message'
-    }
-  }
+      type: 'chat_message',
+    },
+  },
 })
 ```
 
@@ -506,20 +527,22 @@ await comms.send({
 await comms.send({
   slack: {
     text: 'Production deployment completed! 🎉',
-    attachments: [{
-      color: 'good',
-      title: 'v2.0.0 Deployment',
-      text: 'All systems operational',
-      fields: [
-        { title: 'Environment', value: 'Production', short: true },
-        { title: 'Version', value: 'v2.0.0', short: true },
-        { title: 'Deploy Time', value: '2 minutes', short: true },
-        { title: 'Status', value: '✅ Success', short: true }
-      ],
-      footer: 'WebVentures Deploy Bot',
-      ts: Math.floor(Date.now() / 1000)
-    }]
-  }
+    attachments: [
+      {
+        color: 'good',
+        title: 'v2.0.0 Deployment',
+        text: 'All systems operational',
+        fields: [
+          { title: 'Environment', value: 'Production', short: true },
+          { title: 'Version', value: 'v2.0.0', short: true },
+          { title: 'Deploy Time', value: '2 minutes', short: true },
+          { title: 'Status', value: '✅ Success', short: true },
+        ],
+        footer: 'WebVentures Deploy Bot',
+        ts: Math.floor(Date.now() / 1000),
+      },
+    ],
+  },
 })
 ```
 
@@ -533,11 +556,11 @@ const geographicRouting: StrategyFunction = (providers, notification) => {
 
   // Route EU users to EU provider, US users to US provider
   if (userCountry === 'DE' || userCountry === 'FR') {
-    return providers.find(p => p.id === 'eu-provider')
+    return providers.find((p) => p.id === 'eu-provider')
   }
 
   if (userCountry === 'US') {
-    return providers.find(p => p.id === 'us-provider')
+    return providers.find((p) => p.id === 'us-provider')
   }
 
   return providers[0] // Default
@@ -548,11 +571,11 @@ const comms = new CommsSdk({
     email: {
       providers: [
         { type: 'ses', id: 'us-provider', region: 'us-east-1' },
-        { type: 'ses', id: 'eu-provider', region: 'eu-west-1' }
+        { type: 'ses', id: 'eu-provider', region: 'eu-west-1' },
       ],
-      customStrategy: geographicRouting
-    }
-  }
+      customStrategy: geographicRouting,
+    },
+  },
 })
 ```
 
@@ -565,13 +588,15 @@ const comms = new CommsSdk({
 ### Response Status Checking
 
 ```typescript
-const result = await comms.send({ /* ... */ })
+const result = await comms.send({
+  /* ... */
+})
 
 if (result.status === 'success') {
   console.log('✓ Notification sent:', result.channels.email?.id)
 } else {
   console.error('✗ Notification failed:', result.errors)
-  result.errors?.forEach(error => {
+  result.errors?.forEach((error) => {
     console.error(`${error.channel}: ${error.message}`)
   })
 }
@@ -582,7 +607,9 @@ if (result.status === 'success') {
 ```typescript
 import { isSuccessResponse, isErrorResponse, getErrors, isCommsError } from '@webventures/comms'
 
-const result = await comms.send({ /* ... */ })
+const result = await comms.send({
+  /* ... */
+})
 
 if (isSuccessResponse(result)) {
   console.log('Success!', result.channels)
@@ -590,7 +617,7 @@ if (isSuccessResponse(result)) {
 
 if (isErrorResponse(result)) {
   const errors = getErrors(result)
-  errors.forEach(err => console.error(err.message))
+  errors.forEach((err) => console.error(err.message))
 }
 ```
 
@@ -600,7 +627,9 @@ if (isErrorResponse(result)) {
 import { CommsError, ProviderError } from '@webventures/comms'
 
 try {
-  await comms.send({ /* ... */ })
+  await comms.send({
+    /* ... */
+  })
 } catch (error) {
   if (error instanceof ProviderError) {
     console.error(`Provider ${error.providerId} failed on ${error.channel}:`, error.message)
@@ -635,8 +664,8 @@ Configure SDK:
 const comms = new CommsSdk({
   useNotificationCatcher: true, // Sends all to http://localhost:1080
   channels: {
-    email: { providers: [{ type: 'logger' }] } // Optional: also log to console
-  }
+    email: { providers: [{ type: 'logger' }] }, // Optional: also log to console
+  },
 })
 
 await comms.send({
@@ -644,8 +673,8 @@ await comms.send({
     from: 'test@example.com',
     to: 'user@example.com',
     subject: 'Test Email',
-    html: '<h1>Testing</h1>'
-  }
+    html: '<h1>Testing</h1>',
+  },
 })
 ```
 
@@ -664,11 +693,11 @@ const comms = new CommsSdk({
       providers: isProd
         ? [
             { type: 'sendgrid', apiKey: process.env.SENDGRID_API_KEY! },
-            { type: 'ses', region: 'us-east-1', accessKeyId: '...', secretAccessKey: '...' }
+            { type: 'ses', region: 'us-east-1', accessKeyId: '...', secretAccessKey: '...' },
           ]
-        : [{ type: 'logger' }]
-    }
-  }
+        : [{ type: 'logger' }],
+    },
+  },
 })
 ```
 
@@ -721,7 +750,7 @@ import CommsSdk, {
   isSuccessResponse,
   isErrorResponse,
   getErrors,
-  isCommsError
+  isCommsError,
 } from '@webventures/comms'
 ```
 
@@ -735,11 +764,11 @@ const config: CommsSdkConfig = {
       providers: [
         {
           type: 'sendgrid',
-          apiKey: 'your-key'
-        } // TypeScript validates provider config
-      ]
-    }
-  }
+          apiKey: 'your-key',
+        }, // TypeScript validates provider config
+      ],
+    },
+  },
 }
 
 const comms = new CommsSdk(config)
@@ -757,9 +786,9 @@ const emailRequest: EmailRequest = {
     {
       filename: 'doc.pdf',
       content: buffer,
-      contentType: 'application/pdf'
-    }
-  ]
+      contentType: 'application/pdf',
+    },
+  ],
 }
 
 const request: NotificationRequest = {
@@ -777,38 +806,38 @@ const result: NotificationStatus = await comms.send(request)
 
 ### Email Providers (7)
 
-| Provider | Type | Features |
-|----------|------|----------|
-| **SMTP** | `smtp` | Any SMTP server, OAuth 2.0 support |
-| **SendGrid** | `sendgrid` | API v3, templates, tracking |
-| **AWS SES** | `ses` | High volume, cost-effective |
-| **Mailgun** | `mailgun` | EU/US regions, validation API |
-| **Mandrill** | `mandrill` | MailChimp integration, templates |
-| **SparkPost** | `sparkpost` | Analytics, A/B testing |
-| **Sendmail** | `sendmail` | Local sendmail binary |
+| Provider      | Type        | Features                           |
+| ------------- | ----------- | ---------------------------------- |
+| **SMTP**      | `smtp`      | Any SMTP server, OAuth 2.0 support |
+| **SendGrid**  | `sendgrid`  | API v3, templates, tracking        |
+| **AWS SES**   | `ses`       | High volume, cost-effective        |
+| **Mailgun**   | `mailgun`   | EU/US regions, validation API      |
+| **Mandrill**  | `mandrill`  | MailChimp integration, templates   |
+| **SparkPost** | `sparkpost` | Analytics, A/B testing             |
+| **Sendmail**  | `sendmail`  | Local sendmail binary              |
 
 ### SMS Providers (9)
 
-| Provider | Type | Countries |
-|----------|------|-----------|
-| **Twilio** | `twilio` | 180+ countries |
-| **Vonage (Nexmo)** | `nexmo` | Global coverage |
-| **Plivo** | `plivo` | 190+ countries |
-| **Infobip** | `infobip` | Global, enterprise |
-| **OVH** | `ovh` | Europe focus |
-| **Callr** | `callr` | Europe, North America |
-| **Clickatell** | `clickatell` | Global coverage |
-| **46elks** | `46elks` | Sweden focus |
-| **Seven** | `seven` | Europe, APAC |
+| Provider           | Type         | Countries             |
+| ------------------ | ------------ | --------------------- |
+| **Twilio**         | `twilio`     | 180+ countries        |
+| **Vonage (Nexmo)** | `nexmo`      | Global coverage       |
+| **Plivo**          | `plivo`      | 190+ countries        |
+| **Infobip**        | `infobip`    | Global, enterprise    |
+| **OVH**            | `ovh`        | Europe focus          |
+| **Callr**          | `callr`      | Europe, North America |
+| **Clickatell**     | `clickatell` | Global coverage       |
+| **46elks**         | `46elks`     | Sweden focus          |
+| **Seven**          | `seven`      | Europe, APAC          |
 
 ### Push Notification Providers (4)
 
-| Provider | Type | Platform |
-|----------|------|----------|
+| Provider | Type  | Platform                       |
+| -------- | ----- | ------------------------------ |
 | **APNs** | `apn` | iOS (Token & Certificate auth) |
-| **FCM** | `fcm` | Android, iOS, Web |
-| **WNS** | `wns` | Windows |
-| **ADM** | `adm` | Amazon Fire devices |
+| **FCM**  | `fcm` | Android, iOS, Web              |
+| **WNS**  | `wns` | Windows                        |
+| **ADM**  | `adm` | Amazon Fire devices            |
 
 ### Other Providers
 
@@ -841,7 +870,9 @@ WebVentures Comms SDK follows enterprise-grade design patterns:
 
 ```typescript
 // ✓ Good - Reuse instance (connection pooling, caching)
-const comms = new CommsSdk({ /* config */ })
+const comms = new CommsSdk({
+  /* config */
+})
 
 export async function sendEmail(to: string, subject: string) {
   return await comms.send({ email: { from: 'noreply@example.com', to, subject, text: '...' } })
@@ -849,8 +880,12 @@ export async function sendEmail(to: string, subject: string) {
 
 // ✗ Bad - Creating new instance per call (expensive)
 export async function sendEmail(to: string, subject: string) {
-  const comms = new CommsSdk({ /* config */ }) // Don't do this!
-  return await comms.send({ /* ... */ })
+  const comms = new CommsSdk({
+    /* config */
+  }) // Don't do this!
+  return await comms.send({
+    /* ... */
+  })
 }
 ```
 
@@ -868,7 +903,9 @@ const comms = createNodeCommsFromEnv()
 ```typescript
 import winston from 'winston'
 
-const comms = new CommsSdk({ /* ... */ })
+const comms = new CommsSdk({
+  /* ... */
+})
 
 // Mute logs in production
 if (process.env.NODE_ENV === 'production') {
@@ -878,14 +915,16 @@ if (process.env.NODE_ENV === 'production') {
 // Custom logging
 comms.logger.configure([
   new winston.transports.File({ filename: 'notifications.log', level: 'error' }),
-  new winston.transports.Console({ level: 'info' })
+  new winston.transports.Console({ level: 'info' }),
 ])
 ```
 
 ### ✅ Handle Errors Gracefully
 
 ```typescript
-const result = await comms.send({ /* ... */ })
+const result = await comms.send({
+  /* ... */
+})
 
 if (result.status === 'error') {
   // Log for monitoring

@@ -267,14 +267,14 @@ interface EnvironmentConfig {
 
 **Properties:**
 
-| Property         | Type    | Description                                                              |
-| ---------------- | ------- | ------------------------------------------------------------------------ |
+| Property         | Type    | Description                                                            |
+| ---------------- | ------- | ---------------------------------------------------------------------- |
 | `httpProxy`      | string  | HTTP proxy URL (also via COMMS_HTTP_PROXY env var)                     |
 | `catcherOptions` | string  | Notification catcher SMTP URL (also via COMMS_CATCHER_OPTIONS env var) |
-| `isSSR`          | boolean | Whether running in SSR environment                                       |
-| `isReactNative`  | boolean | Whether running in React Native                                          |
-| `isNextJS`       | boolean | Whether running in Next.js                                               |
-| `isExpo`         | boolean | Whether running in Expo                                                  |
+| `isSSR`          | boolean | Whether running in SSR environment                                     |
+| `isReactNative`  | boolean | Whether running in React Native                                        |
+| `isNextJS`       | boolean | Whether running in Next.js                                             |
+| `isExpo`         | boolean | Whether running in Expo                                                |
 
 ---
 

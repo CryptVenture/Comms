@@ -142,26 +142,31 @@ function transformCallArgs(args: any[]): any[] {
   }
 }
 
-// Create a proxy that transforms calls when they're read
+// Extend Vitest's expect with custom matchers that transform the call arguments
+import { expect } from 'vitest'
+
+expect.extend({
+  toHaveBeenLastCalledWith(received: any, ...expected: any[]) {
+    // Get the last call and transform it
+    const lastCall = received.mock?.lastCall
+    const transformedLastCall = lastCall ? transformCallArgs(lastCall) : undefined
+
+    // Use the built-in equality check
+    const pass = this.equals(transformedLastCall, expected)
+
+    return {
+      pass,
+      message: () =>
+        pass
+          ? `expected last call not to have been called with ${this.utils.printExpected(expected)}`
+          : `expected last call to have been called with ${this.utils.printExpected(expected)}, but was called with ${this.utils.printReceived(transformedLastCall)}`,
+    }
+  },
+})
+
+// Export mockRequest directly - no wrapping needed since we're using custom matchers
 export const mockHttp = new Proxy(mockRequest, {
   get(target, prop) {
-    if (prop === 'mock') {
-      return new Proxy(target.mock, {
-        get(mockTarget, mockProp) {
-          if (mockProp === 'calls') {
-            // Transform all calls when accessed
-            return mockTarget.calls.map((call: any[]) => transformCallArgs(call))
-          }
-          if (mockProp === 'lastCall') {
-            // Transform the last call when accessed
-            const lastCall = mockTarget.lastCall
-            return lastCall ? transformCallArgs(lastCall) : undefined
-          }
-          return mockTarget[mockProp as keyof typeof mockTarget]
-        },
-      })
-    }
-    // Check if it's the 'body' property
     if (prop === 'body') {
       return getMockState().requestBody
     }
