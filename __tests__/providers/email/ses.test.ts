@@ -1,0 +1,162 @@
+import { vi, test, expect } from 'vitest'
+import CommsSdk from '../../../src'
+import mockHttp, { mockResponse } from '../mockHttp.test'
+
+vi.mock('../../../src/util/logger', () => ({
+  default: {
+    warn: vi.fn(),
+  },
+}))
+
+const sdk = new CommsSdk({
+  channels: {
+    email: {
+      providers: [
+        {
+          type: 'ses',
+          region: 'eu-west-1',
+          accessKeyId: 'key',
+          secretAccessKey: 'secret',
+        },
+      ],
+    },
+  },
+})
+
+const request = {
+  email: {
+    from: 'me@example.com',
+    to: 'john@example.com',
+    subject: 'Hi John',
+    text: 'Hello John! How are you?',
+  },
+}
+
+test('SES success with minimal parameters.', async () => {
+  mockResponse(200, '<MessageId>returned-id</MessageId>')
+  const result = await sdk.send(request)
+  const datetime = new Date()
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/[:-]|\.\d{3}/g, '')
+  expect(mockHttp).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      hostname: 'email.eu-west-1.amazonaws.com',
+      method: 'POST',
+      path: '/',
+      protocol: 'https:',
+      href: 'https://email.eu-west-1.amazonaws.com/',
+      headers: expect.objectContaining({
+        Authorization: [
+          expect.stringContaining(
+            `AWS4-HMAC-SHA256 Credential=key/${datetime.substring(0, 8)}/eu-west-1/ses/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=`
+          ),
+        ],
+        Host: ['email.eu-west-1.amazonaws.com'],
+        'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
+        'X-Amz-Date': [datetime],
+        'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
+        'User-Agent': ['webventures-comms/v2 (+https://github.com/cryptventure/comms)'],
+      }),
+    })
+  )
+  expect((mockHttp as any).body).toContain(
+    'Action=SendRawEmail&Version=2010-12-01&RawMessage.Data='
+  )
+  expect(result).toEqual({
+    status: 'success',
+    channels: {
+      email: { id: 'returned-id', providerId: 'email-ses-provider' },
+    },
+  })
+})
+
+test('SES success with all parameters.', async () => {
+  mockResponse(200, '<MessageId>returned-id</MessageId>')
+  const completeRequest = {
+    metadata: {
+      id: '24',
+      userId: '36',
+    },
+    email: {
+      from: 'from@example.com',
+      to: 'to@example.com',
+      subject: 'Hi John',
+      html: '<b>Hello John! How are you?</b>',
+      replyTo: 'replyto@example.com',
+      headers: { 'My-Custom-Header': 'my-value' },
+      cc: ['cc1@example.com', 'cc2@example.com'],
+      bcc: ['bcc@example.com'],
+      attachments: [
+        {
+          contentType: 'text/plain',
+          filename: 'test.txt',
+          content: 'hello!',
+        },
+      ],
+      customize: async (provider: string, request: any) => ({ ...request, subject: 'Hi John!' }),
+    },
+  }
+  const result = await sdk.send(completeRequest)
+  const datetime = new Date()
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/[:-]|\.\d{3}/g, '')
+  expect(mockHttp).toHaveBeenLastCalledWith(
+    expect.objectContaining({
+      hostname: 'email.eu-west-1.amazonaws.com',
+      method: 'POST',
+      path: '/',
+      protocol: 'https:',
+      href: 'https://email.eu-west-1.amazonaws.com/',
+      headers: expect.objectContaining({
+        Authorization: [
+          expect.stringContaining(
+            `AWS4-HMAC-SHA256 Credential=key/${datetime.substring(0, 8)}/eu-west-1/ses/aws4_request, SignedHeaders=host;x-amz-content-sha256;x-amz-date, Signature=`
+          ),
+        ],
+        Host: ['email.eu-west-1.amazonaws.com'],
+        'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
+        'X-Amz-Date': [datetime],
+        'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
+        'User-Agent': ['webventures-comms/v2 (+https://github.com/cryptventure/comms)'],
+      }),
+    })
+  )
+  expect((mockHttp as any).body).toContain(
+    'Action=SendRawEmail&Version=2010-12-01&RawMessage.Data='
+  )
+  expect(result).toEqual({
+    status: 'success',
+    channels: {
+      email: { id: 'returned-id', providerId: 'email-ses-provider' },
+    },
+  })
+})
+
+test('SES should return an error if a parameter is not of the right type.', async () => {
+  const result = await sdk.send({ email: { text: [] as any } })
+  expect(result).toEqual({
+    status: 'error',
+    errors: {
+      email: 'The "text" field must be of type string or an instance of Buffer or Uint8Array',
+    },
+    channels: {
+      email: { id: undefined, providerId: 'email-ses-provider' },
+    },
+  })
+})
+
+test('SES API error.', async () => {
+  mockResponse(400, 'error!')
+  const result = await sdk.send(request)
+  expect(result).toEqual({
+    status: 'error',
+    errors: {
+      email: 'AWS SES API error: error!',
+    },
+    channels: {
+      email: { id: undefined, providerId: 'email-ses-provider' },
+    },
+  })
+})

@@ -1,0 +1,259 @@
+{
+  "name": "@webventures/comms",
+  "version": "2.0.0",
+  "description": "WebVentures Comms SDK - Unified communication SDK for TypeScript & JavaScript. Send emails, SMS, push notifications, and more with a single, type-safe API. First-class support for Next.js 16+, React 19, React Native, and Expo.",
+  "keywords": [
+    "notification",
+    "notifications",
+    "email",
+    "sms",
+    "push",
+    "push-notifications",
+    "webpush",
+    "slack",
+    "whatsapp",
+    "voice",
+    "transactional",
+    "communications",
+    "comms",
+    "webventures",
+    "typescript",
+    "types",
+    "type-safe",
+    "nextjs",
+    "nextjs-16",
+    "react",
+    "react-19",
+    "react-native",
+    "expo",
+    "nodejs",
+    "sendgrid",
+    "ses",
+    "aws-ses",
+    "mailgun",
+    "twilio",
+    "fcm",
+    "firebase",
+    "apn",
+    "apns",
+    "smtp",
+    "multi-provider",
+    "fallback",
+    "high-availability"
+  ],
+  "homepage": "https://github.com/cryptventure/comms#readme",
+  "bugs": {
+    "url": "https://github.com/cryptventure/comms/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cryptventure/comms.git"
+  },
+  "license": "MIT",
+  "author": "WebVentures",
+  "type": "commonjs",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "default": "./dist/index.mjs"
+    },
+    "./providers/email": {
+      "import": {
+        "types": "./dist/providers/email.d.mts",
+        "default": "./dist/providers/email.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/email.d.ts",
+        "default": "./dist/providers/email.js"
+      },
+      "default": "./dist/providers/email.mjs"
+    },
+    "./providers/sms": {
+      "import": {
+        "types": "./dist/providers/sms.d.mts",
+        "default": "./dist/providers/sms.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/sms.d.ts",
+        "default": "./dist/providers/sms.js"
+      },
+      "default": "./dist/providers/sms.mjs"
+    },
+    "./providers/push": {
+      "import": {
+        "types": "./dist/providers/push.d.mts",
+        "default": "./dist/providers/push.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/push.d.ts",
+        "default": "./dist/providers/push.js"
+      },
+      "default": "./dist/providers/push.mjs"
+    },
+    "./providers/voice": {
+      "import": {
+        "types": "./dist/providers/voice.d.mts",
+        "default": "./dist/providers/voice.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/voice.d.ts",
+        "default": "./dist/providers/voice.js"
+      },
+      "default": "./dist/providers/voice.mjs"
+    },
+    "./providers/webpush": {
+      "import": {
+        "types": "./dist/providers/webpush.d.mts",
+        "default": "./dist/providers/webpush.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/webpush.d.ts",
+        "default": "./dist/providers/webpush.js"
+      },
+      "default": "./dist/providers/webpush.mjs"
+    },
+    "./providers/slack": {
+      "import": {
+        "types": "./dist/providers/slack.d.mts",
+        "default": "./dist/providers/slack.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/slack.d.ts",
+        "default": "./dist/providers/slack.js"
+      },
+      "default": "./dist/providers/slack.mjs"
+    },
+    "./providers/whatsapp": {
+      "import": {
+        "types": "./dist/providers/whatsapp.d.mts",
+        "default": "./dist/providers/whatsapp.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/whatsapp.d.ts",
+        "default": "./dist/providers/whatsapp.js"
+      },
+      "default": "./dist/providers/whatsapp.mjs"
+    },
+    "./strategies/fallback": {
+      "import": {
+        "types": "./dist/strategies/fallback.d.mts",
+        "default": "./dist/strategies/fallback.mjs"
+      },
+      "require": {
+        "types": "./dist/strategies/fallback.d.ts",
+        "default": "./dist/strategies/fallback.js"
+      },
+      "default": "./dist/strategies/fallback.mjs"
+    },
+    "./strategies/roundrobin": {
+      "import": {
+        "types": "./dist/strategies/roundrobin.d.mts",
+        "default": "./dist/strategies/roundrobin.mjs"
+      },
+      "require": {
+        "types": "./dist/strategies/roundrobin.d.ts",
+        "default": "./dist/strategies/roundrobin.js"
+      },
+      "default": "./dist/strategies/roundrobin.mjs"
+    },
+    "./strategies/no-fallback": {
+      "import": {
+        "types": "./dist/strategies/no-fallback.d.mts",
+        "default": "./dist/strategies/no-fallback.mjs"
+      },
+      "require": {
+        "types": "./dist/strategies/no-fallback.d.ts",
+        "default": "./dist/strategies/no-fallback.js"
+      },
+      "default": "./dist/strategies/no-fallback.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "directories": {
+    "doc": "docs",
+    "example": "examples"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "pnpm run clean && tsup && pnpm run build:check",
+    "build:check": "publint && attw --pack . --ignore-rules=no-resolution",
+    "clean": "rm -rf dist/ coverage/ .turbo",
+    "dev": "tsx examples/with-notification-catcher.ts",
+    "demo": "notification-catcher & tsx examples/with-notification-catcher.ts && printf '\\n>>> Please visit http://localhost:1080 <<<\\n\\n'",
+    "lint": "eslint . && prettier --check .",
+    "lint:fix": "eslint . --fix && prettier --write .",
+    "type-check": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest run --coverage",
+    "prepublishOnly": "pnpm run build && pnpm run test",
+    "run-catcher": "notification-catcher",
+    "size": "echo 'WebVentures Comms build size:' && du -hs dist/",
+    "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\""
+  },
+  "dependencies": {
+    "form-data": "^4.0.5",
+    "https-proxy-agent": "^7.0.6",
+    "node-pushnotifications": "^4.0.3",
+    "nodemailer": "^7.0.12",
+    "undici": "^7.5.1",
+    "web-push": "^3.6.7",
+    "winston": "^3.19.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.18.0",
+    "@semantic-release/git": "^10.0.1",
+    "semantic-release": "^24.2.0",
+    "@total-typescript/ts-reset": "^0.6.1",
+    "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/web-push": "^3.6.3",
+    "@typescript-eslint/eslint-plugin": "^8.21.0",
+    "@typescript-eslint/parser": "^8.21.0",
+    "@vitest/coverage-v8": "^3.0.6",
+    "@vitest/ui": "^3.0.6",
+    "@arethetypeswrong/cli": "^0.18.2",
+    "eslint": "^9.18.0",
+    "eslint-config-prettier": "^10.0.1",
+    "eslint-plugin-prettier": "^5.2.1",
+    "nodemon": "^3.1.11",
+    "notification-catcher": "^1.2.1",
+    "prettier": "^3.4.2",
+    "publint": "^0.2.12",
+    "tsup": "^8.3.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.6"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "module": "./dist/index.mjs",
+  "packageManager": "pnpm@10.0.0"
+}
