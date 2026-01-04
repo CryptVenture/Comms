@@ -194,8 +194,7 @@ const strategyWeighted: WeightedStrategyFunction = <TRequest = unknown>(
   for (const provider of providers) {
     if (typeof provider.weight !== 'number' || provider.weight < 0) {
       throw new Error(
-        `Provider "${provider.id}" must have a non-negative weight. ` +
-          `Got: ${provider.weight}`
+        `Provider "${provider.id}" must have a non-negative weight. Got: ${provider.weight}`
       )
     }
   }

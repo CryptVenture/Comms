@@ -1,4 +1,4 @@
-import { vi, test, expect, describe, beforeEach, afterEach } from 'vitest'
+import { vi, test, expect, describe, beforeEach } from 'vitest'
 import strategyWeighted from '../../../src/strategies/providers/weighted'
 import logger from '../../../src/util/logger'
 import type { WeightedProvider } from '../../../src/types/strategies'
@@ -137,14 +137,10 @@ describe('Weighted Strategy', () => {
   describe('fallback on failure', () => {
     test('should fall back to remaining providers when selected provider fails', async () => {
       const originalRandom = Math.random
-      let callCount = 0
 
       // First call returns 0 (selects failing provider-1)
       // Second call returns 0 (selects provider-2 from remaining)
-      Math.random = vi.fn(() => {
-        callCount++
-        return 0
-      })
+      Math.random = vi.fn(() => 0)
 
       const providers: WeightedProvider<typeof request>[] = [
         {
@@ -449,9 +445,7 @@ describe('Weighted Strategy', () => {
     })
 
     test('should throw error for non-numeric weights', () => {
-      const providers = [
-        { id: 'provider-1', send: async () => 'msg-1', weight: 'high' as any },
-      ]
+      const providers = [{ id: 'provider-1', send: async () => 'msg-1', weight: 'high' as any }]
 
       expect(() => strategyWeighted(providers as any)).toThrow(
         'Provider "provider-1" must have a non-negative weight'
