@@ -2,6 +2,7 @@ import EmailLoggerProvider from '../logger'
 import EmailMailgunProvider from './mailgun'
 import EmailMandrillProvider from './mandrill'
 import EmailNotificationCatcherProvider from './notificationCatcher'
+import EmailPostmarkProvider from './postmark'
 import EmailSendGridProvider from './sendgrid'
 import EmailSesProvider from './ses'
 import EmailSendmailProvider from './sendmail'
@@ -83,6 +84,9 @@ export default function factory({
 
     case 'mandrill':
       return new EmailMandrillProvider(config as never)
+
+    case 'postmark':
+      return new EmailPostmarkProvider(config as never)
 
     case 'sendgrid':
       return new EmailSendGridProvider(config as never)
