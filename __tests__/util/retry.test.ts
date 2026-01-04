@@ -544,6 +544,268 @@ describe('withRetry', () => {
 
       await expect(retryPromise).rejects.toThrow('Delay aborted')
     })
+
+    test('abort during first retry delay stops all further retries', async () => {
+      const controller = new AbortController()
+      const error = new Error('Fail')
+      const fn = vi.fn().mockRejectedValue(error)
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        signal: controller.signal,
+        jitter: false,
+        onRetry,
+      })
+
+      // Let first attempt fail
+      await vi.advanceTimersByTimeAsync(0)
+      // onRetry should have been called once before the delay
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      // Abort during delay
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow('Delay aborted')
+
+      // Function should only have been called once (initial attempt)
+      expect(fn).toHaveBeenCalledTimes(1)
+      // onRetry was called once before abort during delay
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    test('abort during second retry delay preserves first retry attempt', async () => {
+      const controller = new AbortController()
+      const error = new Error('Fail')
+      const fn = vi.fn().mockRejectedValue(error)
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        signal: controller.signal,
+        jitter: false,
+        baseDelay: 1000,
+        onRetry,
+      })
+
+      // Let first attempt fail and complete first retry delay (1000ms)
+      await vi.advanceTimersByTimeAsync(1000)
+
+      // Now fn has been called twice (initial + first retry)
+      expect(fn).toHaveBeenCalledTimes(2)
+
+      // Advance into second retry delay (500ms of 2000ms)
+      vi.advanceTimersByTime(500)
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow('Delay aborted')
+
+      // Function was called twice before abort
+      expect(fn).toHaveBeenCalledTimes(2)
+      // onRetry called twice (before each retry)
+      expect(onRetry).toHaveBeenCalledTimes(2)
+    })
+
+    test('abort during third retry delay after multiple failures', async () => {
+      const controller = new AbortController()
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Fail 1'))
+        .mockRejectedValueOnce(new Error('Fail 2'))
+        .mockRejectedValueOnce(new Error('Fail 3'))
+        .mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        signal: controller.signal,
+        jitter: false,
+        baseDelay: 100,
+        onRetry,
+      })
+
+      // Complete first two retry delays
+      await vi.advanceTimersByTimeAsync(100) // First retry delay
+      await vi.advanceTimersByTimeAsync(200) // Second retry delay
+
+      expect(fn).toHaveBeenCalledTimes(3)
+
+      // Advance into third retry delay (half of 400ms)
+      vi.advanceTimersByTime(200)
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow('Delay aborted')
+
+      // Function was called 3 times before abort (would have succeeded on 4th)
+      expect(fn).toHaveBeenCalledTimes(3)
+      expect(onRetry).toHaveBeenCalledTimes(3)
+    })
+
+    test('aborted delay error has AbortError name', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 3,
+        signal: controller.signal,
+        jitter: false,
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      vi.advanceTimersByTime(100)
+      controller.abort()
+
+      try {
+        await retryPromise
+        expect.fail('Should have thrown')
+      } catch (error) {
+        expect((error as Error).name).toBe('AbortError')
+        expect((error as Error).message).toBe('Delay aborted')
+      }
+    })
+
+    test('does not call onRetry after abort', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 10,
+        signal: controller.signal,
+        jitter: false,
+        baseDelay: 1000,
+        onRetry,
+      })
+
+      // Setup rejection expectation first to prevent unhandled rejection warning
+      const expectation = expect(retryPromise).rejects.toThrow()
+
+      // Let first attempt fail, onRetry called
+      await vi.advanceTimersByTimeAsync(0)
+      const callsBeforeAbort = onRetry.mock.calls.length
+
+      // Abort during delay
+      controller.abort()
+
+      await expectation
+
+      // No additional onRetry calls after abort
+      expect(onRetry).toHaveBeenCalledTimes(callsBeforeAbort)
+    })
+
+    test('abort with custom reason is propagated', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 3,
+        signal: controller.signal,
+        jitter: false,
+      })
+
+      await vi.advanceTimersByTimeAsync(0)
+      vi.advanceTimersByTime(100)
+      controller.abort('User cancelled')
+
+      await expect(retryPromise).rejects.toThrow('Delay aborted')
+    })
+
+    test('concurrent retries with different abort signals operate independently', async () => {
+      const controller1 = new AbortController()
+      const controller2 = new AbortController()
+      const fn1 = vi.fn().mockRejectedValue(new Error('Fail 1'))
+      const fn2 = vi.fn().mockRejectedValue(new Error('Fail 2'))
+
+      const retry1 = withRetry(fn1, {
+        maxRetries: 3,
+        signal: controller1.signal,
+        jitter: false,
+        baseDelay: 1000,
+      })
+
+      const retry2 = withRetry(fn2, {
+        maxRetries: 3,
+        signal: controller2.signal,
+        jitter: false,
+        baseDelay: 1000,
+      })
+
+      // Let both first attempts fail
+      await vi.advanceTimersByTimeAsync(0)
+
+      // Abort only the first one
+      controller1.abort()
+
+      await expect(retry1).rejects.toThrow('Delay aborted')
+
+      // Second retry should still be pending
+      expect(fn2).toHaveBeenCalledTimes(1)
+
+      // Complete second retry's delay
+      await vi.advanceTimersByTimeAsync(1000)
+      expect(fn2).toHaveBeenCalledTimes(2)
+
+      // Abort second one now
+      controller2.abort()
+      await expect(retry2).rejects.toThrow('Delay aborted')
+    })
+
+    test('abort cleans up timer resources', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+
+      const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout')
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 3,
+        signal: controller.signal,
+        jitter: false,
+        baseDelay: 5000,
+      })
+
+      // Let first attempt fail
+      await vi.advanceTimersByTimeAsync(0)
+
+      // Abort during delay
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow()
+
+      // Verify clearTimeout was called to clean up
+      expect(clearTimeoutSpy).toHaveBeenCalled()
+
+      clearTimeoutSpy.mockRestore()
+    })
+
+    test('abort during function execution prevents retry delay', async () => {
+      const controller = new AbortController()
+
+      // Create a function that aborts during its execution
+      const fn = vi.fn().mockImplementation(async () => {
+        // Simulate some work, then get aborted
+        await new Promise((resolve) => setTimeout(resolve, 100))
+        controller.abort()
+        throw new Error('Fail after abort')
+      })
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 3,
+        signal: controller.signal,
+        jitter: false,
+      })
+
+      // Setup rejection expectation first to prevent unhandled rejection warning
+      const expectation = expect(retryPromise).rejects.toThrow('Delay aborted')
+
+      // Let the first attempt execute
+      await vi.advanceTimersByTimeAsync(100)
+
+      await expectation
+
+      // Function was called once, but the delay after it threw was aborted
+      expect(fn).toHaveBeenCalledTimes(1)
+    })
   })
 
   describe('error handling edge cases', () => {
