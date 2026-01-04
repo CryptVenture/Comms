@@ -56,6 +56,14 @@ export type {
 
 export type { StrategyFunction } from './types/strategies'
 
+// Retry utility types
+export type {
+  RetryOptions,
+  RetryAttemptInfo,
+  ShouldRetryContext,
+  BackoffOptions,
+} from './util/retry'
+
 export {
   CommsError,
   ProviderError,
@@ -65,6 +73,18 @@ export {
   isCommsError,
   isProviderError,
 } from './types/errors'
+
+// Retry utilities
+export {
+  DEFAULT_RETRYABLE_STATUS_CODES,
+  DEFAULT_RETRY_OPTIONS,
+  calculateBackoff,
+  delay,
+  withRetry,
+  getRetryOptionsWithDefaults,
+  isRetryableStatusCode,
+  getStatusCodeFromError,
+} from './util/retry'
 
 export { detectEnvironment } from './types/config'
 export { isSuccessResponse, isErrorResponse, getErrors, getChannelIds } from './types/responses'
