@@ -70,6 +70,8 @@ const providerStrategies: Record<MultiProviderStrategyType, StrategyFunction> = 
   fallback: strategyFallback,
   'no-fallback': strategyNoFallback,
   roundrobin: strategyRoundRobin,
+  // TODO: Replace with actual weighted strategy implementation in subtask 1.3/1.4
+  weighted: strategyFallback,
 }
 
 /**
