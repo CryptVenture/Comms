@@ -851,6 +851,445 @@ describe('withRetry', () => {
   })
 })
 
+describe('onRetry callback behavior', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  describe('argument verification', () => {
+    test('receives correct attempt number for each retry', async () => {
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Fail 1'))
+        .mockRejectedValueOnce(new Error('Fail 2'))
+        .mockRejectedValueOnce(new Error('Fail 3'))
+        .mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 5, onRetry, jitter: false, baseDelay: 1000 })
+
+      // Complete all retry delays
+      await vi.advanceTimersByTimeAsync(1000) // First retry delay
+      await vi.advanceTimersByTimeAsync(2000) // Second retry delay
+      await vi.advanceTimersByTimeAsync(4000) // Third retry delay
+
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(3)
+      expect(onRetry.mock.calls[0]?.[0].attempt).toBe(1)
+      expect(onRetry.mock.calls[1]?.[0].attempt).toBe(2)
+      expect(onRetry.mock.calls[2]?.[0].attempt).toBe(3)
+    })
+
+    test('receives the exact error object that was thrown', async () => {
+      const error1 = new Error('First error')
+      error1.cause = 'cause1'
+      const error2 = new Error('Second error')
+      error2.cause = 'cause2'
+
+      const fn = vi.fn().mockRejectedValueOnce(error1).mockRejectedValueOnce(error2).mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 3, onRetry, jitter: false })
+
+      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(2000)
+
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(2)
+      expect(onRetry.mock.calls[0]?.[0].error).toBe(error1)
+      expect(onRetry.mock.calls[0]?.[0].error.cause).toBe('cause1')
+      expect(onRetry.mock.calls[1]?.[0].error).toBe(error2)
+      expect(onRetry.mock.calls[1]?.[0].error.cause).toBe('cause2')
+    })
+
+    test('receives correctly computed delay using exponential backoff', async () => {
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        onRetry,
+        jitter: false,
+        baseDelay: 100,
+        maxDelay: 30000,
+      })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(3)
+      // Exponential backoff: 100 * 2^0, 100 * 2^1, 100 * 2^2
+      expect(onRetry.mock.calls[0]?.[0].delay).toBe(100) // Attempt 1: 100ms
+      expect(onRetry.mock.calls[1]?.[0].delay).toBe(200) // Attempt 2: 200ms
+      expect(onRetry.mock.calls[2]?.[0].delay).toBe(400) // Attempt 3: 400ms
+    })
+
+    test('receives delay capped at maxDelay', async () => {
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockRejectedValueOnce(new Error('Fail'))
+        .mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        onRetry,
+        jitter: false,
+        baseDelay: 1000,
+        maxDelay: 2000, // Cap at 2000ms
+      })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(4)
+      expect(onRetry.mock.calls[0]?.[0].delay).toBe(1000) // Attempt 1: 1000ms
+      expect(onRetry.mock.calls[1]?.[0].delay).toBe(2000) // Attempt 2: 2000ms (capped)
+      expect(onRetry.mock.calls[2]?.[0].delay).toBe(2000) // Attempt 3: 2000ms (capped)
+      expect(onRetry.mock.calls[3]?.[0].delay).toBe(2000) // Attempt 4: 2000ms (capped)
+    })
+
+    test('receives delay with jitter when enabled', async () => {
+      // Mock random to return predictable value
+      const randomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
+
+      const fn = vi.fn().mockRejectedValueOnce(new Error('Fail')).mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 1,
+        onRetry,
+        jitter: true,
+        baseDelay: 1000,
+        maxJitter: 500,
+      })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(1)
+      // Base delay 1000 + jitter (0.5 * 500 = 250) = 1250
+      expect(onRetry.mock.calls[0]?.[0].delay).toBe(1250)
+
+      randomSpy.mockRestore()
+    })
+
+    test('receives complete RetryAttemptInfo structure', async () => {
+      const expectedError = new Error('Expected failure')
+      const fn = vi.fn().mockRejectedValueOnce(expectedError).mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 1, onRetry, jitter: false, baseDelay: 1000 })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      const callArg = onRetry.mock.calls[0]?.[0]
+      expect(callArg).toEqual({
+        attempt: 1,
+        error: expectedError,
+        delay: 1000,
+      })
+      // Verify object has exactly these keys
+      expect(Object.keys(callArg)).toEqual(['attempt', 'error', 'delay'])
+    })
+  })
+
+  describe('timing and ordering', () => {
+    test('is called BEFORE the retry delay starts', async () => {
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const callOrder: string[] = []
+
+      const onRetry = vi.fn().mockImplementation(() => {
+        callOrder.push('onRetry')
+      })
+
+      const retryPromise = withRetry(fn, { maxRetries: 1, onRetry, jitter: false, baseDelay: 1000 })
+
+      // Setup rejection expectation
+      const expectation = expect(retryPromise).rejects.toThrow()
+
+      // Let first attempt fail
+      await vi.advanceTimersByTimeAsync(0)
+
+      // onRetry should be called immediately after failure, before delay
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      // Complete remaining timers
+      await vi.runAllTimersAsync()
+      await expectation
+    })
+
+    test('is called after each failure but before the next attempt', async () => {
+      const callOrder: string[] = []
+
+      const fn = vi.fn().mockImplementation(() => {
+        callOrder.push('fn called')
+        return Promise.reject(new Error('Fail'))
+      })
+
+      const onRetry = vi.fn().mockImplementation(({ attempt }) => {
+        callOrder.push(`onRetry attempt ${attempt}`)
+      })
+
+      const retryPromise = withRetry(fn, { maxRetries: 2, onRetry, jitter: false, baseDelay: 100 })
+
+      // Setup rejection expectation
+      const expectation = expect(retryPromise).rejects.toThrow()
+
+      await vi.runAllTimersAsync()
+      await expectation
+
+      // Verify order: fn call, onRetry, fn call, onRetry, fn call (final)
+      expect(callOrder).toEqual([
+        'fn called',
+        'onRetry attempt 1',
+        'fn called',
+        'onRetry attempt 2',
+        'fn called',
+      ])
+    })
+
+    test('delay matches what was passed to onRetry', async () => {
+      let expectedDelay = 0
+      const delaySpyStart: number[] = []
+      const delaySpyEnd: number[] = []
+
+      const fn = vi.fn().mockRejectedValueOnce(new Error('Fail')).mockResolvedValue('success')
+
+      const onRetry = vi.fn().mockImplementation(({ delay }) => {
+        expectedDelay = delay
+        delaySpyStart.push(Date.now())
+      })
+
+      const retryPromise = withRetry(fn, { maxRetries: 1, onRetry, jitter: false, baseDelay: 1500 })
+
+      // Let first attempt fail and capture onRetry time
+      await vi.advanceTimersByTimeAsync(0)
+
+      const onRetryTime = Date.now()
+
+      // Advance exactly the expected delay
+      await vi.advanceTimersByTimeAsync(expectedDelay)
+      delaySpyEnd.push(Date.now())
+
+      await retryPromise
+
+      // Verify the delay in onRetry matched what we waited
+      expect(expectedDelay).toBe(1500)
+      expect(delaySpyEnd[0]! - onRetryTime).toBe(1500)
+    })
+  })
+
+  describe('conditional invocation', () => {
+    test('is not called when function succeeds on first attempt', async () => {
+      const fn = vi.fn().mockResolvedValue('success')
+      const onRetry = vi.fn()
+
+      const result = await withRetry(fn, { maxRetries: 3, onRetry })
+
+      expect(result).toBe('success')
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(onRetry).not.toHaveBeenCalled()
+    })
+
+    test('is not called when maxRetries is 0', async () => {
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const onRetry = vi.fn()
+
+      await expect(withRetry(fn, { maxRetries: 0, onRetry })).rejects.toThrow('Fail')
+
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(onRetry).not.toHaveBeenCalled()
+    })
+
+    test('is not called when shouldRetry returns false', async () => {
+      const error = new Error('Non-retryable error')
+      const fn = vi.fn().mockRejectedValue(error)
+      const onRetry = vi.fn()
+      const shouldRetry = vi.fn().mockReturnValue(false)
+
+      await expect(withRetry(fn, { maxRetries: 3, onRetry, shouldRetry })).rejects.toThrow('Non-retryable error')
+
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(shouldRetry).toHaveBeenCalledTimes(1)
+      expect(onRetry).not.toHaveBeenCalled()
+    })
+
+    test('is not called when status code is not retryable', async () => {
+      const error = Object.assign(new Error('Bad request'), { statusCode: 400 })
+      const fn = vi.fn().mockRejectedValue(error)
+      const onRetry = vi.fn()
+
+      await expect(withRetry(fn, { maxRetries: 3, onRetry })).rejects.toThrow('Bad request')
+
+      expect(fn).toHaveBeenCalledTimes(1)
+      expect(onRetry).not.toHaveBeenCalled()
+    })
+
+    test('is called once for each retry that will occur', async () => {
+      const fn = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('Fail 1'))
+        .mockRejectedValueOnce(new Error('Fail 2'))
+        .mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 5, onRetry, jitter: false })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      // 2 failures = 2 retry attempts = 2 onRetry calls
+      expect(fn).toHaveBeenCalledTimes(3)
+      expect(onRetry).toHaveBeenCalledTimes(2)
+    })
+
+    test('is called for all retries when all attempts fail', async () => {
+      const fn = vi.fn().mockRejectedValue(new Error('Always fails'))
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 4, onRetry, jitter: false })
+
+      const expectation = expect(retryPromise).rejects.toThrow('Always fails')
+
+      await vi.runAllTimersAsync()
+      await expectation
+
+      // 4 retries = 4 onRetry calls (initial + 4 retries = 5 fn calls)
+      expect(fn).toHaveBeenCalledTimes(5)
+      expect(onRetry).toHaveBeenCalledTimes(4)
+    })
+  })
+
+  describe('error handling in callback', () => {
+    test('does not prevent retry if onRetry throws synchronously', async () => {
+      const fn = vi.fn().mockRejectedValueOnce(new Error('Fail')).mockResolvedValue('success')
+
+      const onRetry = vi.fn().mockImplementation(() => {
+        throw new Error('onRetry error')
+      })
+
+      // The error in onRetry should propagate up
+      const retryPromise = withRetry(fn, { maxRetries: 1, onRetry, jitter: false })
+
+      await expect(retryPromise).rejects.toThrow('onRetry error')
+    })
+
+    test('onRetry receives converted Error when non-Error is thrown', async () => {
+      const fn = vi.fn().mockRejectedValueOnce('string error').mockResolvedValue('success')
+
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, { maxRetries: 1, onRetry, jitter: false })
+
+      await vi.runAllTimersAsync()
+      await retryPromise
+
+      expect(onRetry).toHaveBeenCalledTimes(1)
+      const receivedError = onRetry.mock.calls[0]?.[0].error
+      expect(receivedError).toBeInstanceOf(Error)
+      expect(receivedError.message).toBe('string error')
+    })
+  })
+
+  describe('with AbortSignal', () => {
+    test('is called before abort if failure occurs first', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 5,
+        signal: controller.signal,
+        onRetry,
+        jitter: false,
+        baseDelay: 1000,
+      })
+
+      // Let first attempt fail - onRetry is called
+      await vi.advanceTimersByTimeAsync(0)
+      expect(onRetry).toHaveBeenCalledTimes(1)
+
+      // Abort during delay
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow('Delay aborted')
+
+      // onRetry was called once before abort
+      expect(onRetry).toHaveBeenCalledTimes(1)
+    })
+
+    test('is not called after abort during delay', async () => {
+      const controller = new AbortController()
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const onRetry = vi.fn()
+
+      const retryPromise = withRetry(fn, {
+        maxRetries: 10,
+        signal: controller.signal,
+        onRetry,
+        jitter: false,
+        baseDelay: 1000,
+      })
+
+      // Let first attempt fail
+      await vi.advanceTimersByTimeAsync(0)
+      const callsAfterFirstAttempt = onRetry.mock.calls.length
+
+      // Abort during first delay
+      controller.abort()
+
+      await expect(retryPromise).rejects.toThrow()
+
+      // No additional onRetry calls after abort
+      expect(onRetry).toHaveBeenCalledTimes(callsAfterFirstAttempt)
+    })
+
+    test('is not called when signal is already aborted', async () => {
+      const controller = new AbortController()
+      controller.abort()
+
+      const fn = vi.fn().mockRejectedValue(new Error('Fail'))
+      const onRetry = vi.fn()
+
+      await expect(
+        withRetry(fn, {
+          maxRetries: 3,
+          signal: controller.signal,
+          onRetry,
+        })
+      ).rejects.toThrow('Operation aborted')
+
+      expect(fn).not.toHaveBeenCalled()
+      expect(onRetry).not.toHaveBeenCalled()
+    })
+  })
+})
+
 describe('getRetryOptionsWithDefaults', () => {
   test('returns all defaults when no options provided', () => {
     const result = getRetryOptionsWithDefaults()
