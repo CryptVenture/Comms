@@ -45,6 +45,27 @@ export interface NotificationStatus {
 }
 
 /**
+ * Discriminated type for successful notification responses.
+ * Narrows NotificationStatus to indicate a successful result with the channels field always present.
+ */
+export interface SuccessNotificationStatus {
+  /**
+   * Status is always 'success' for successful responses
+   */
+  status: 'success'
+
+  /**
+   * Results for successfully sent channels (always present on success)
+   */
+  channels: Partial<Record<ChannelType, ChannelStatus>>
+
+  /**
+   * Errors are not present on successful responses
+   */
+  errors?: undefined
+}
+
+/**
  * Provider send result
  */
 export interface ProviderSendResult {
