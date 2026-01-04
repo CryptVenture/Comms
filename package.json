@@ -41,13 +41,13 @@
     "fallback",
     "high-availability"
   ],
-  "homepage": "https://github.com/cryptventure/comms#readme",
+  "homepage": "https://github.com/CryptVenture/Comms#readme",
   "bugs": {
-    "url": "https://github.com/cryptventure/comms/issues"
+    "url": "https://github.com/CryptVenture/Comms/issues"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/cryptventure/comms.git"
+    "url": "git+https://github.com/CryptVenture/Comms.git"
   },
   "license": "MIT",
   "author": "WebVentures",

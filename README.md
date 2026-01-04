@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7+-blue.svg?style=flat-square)](https://www.typescriptlang.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg?style=flat-square)](https://nodejs.org/)
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](./LICENSE)
-[![Build Status](https://img.shields.io/github/actions/workflow/status/WebVentures/comms/ci-test.yml?style=flat-square)](https://github.com/cryptventure/comms/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/CryptVenture/Comms/ci-test.yml?branch=main&style=flat-square&label=CI)](https://github.com/CryptVenture/Comms/actions)
 
 [Features](#-features) • [Installation](#-installation) • [Quick Start](#-quick-start) • [Documentation](#-documentation) • [Examples](#-examples)
 
@@ -950,7 +950,7 @@ We welcome contributions! Please see our [Contributing Guide](./CONTRIBUTING.md)
 
 ```bash
 # Clone repository
-git clone https://github.com/cryptventure/comms.git
+git clone https://github.com/CryptVenture/Comms.git
 cd comms
 
 # Install dependencies
@@ -1006,8 +1006,8 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 ## 🆘 Support & Community
 
-- **[GitHub Issues](https://github.com/cryptventure/comms/issues)** - Report bugs and request features
-- **[GitHub Discussions](https://github.com/cryptventure/comms/discussions)** - Ask questions and share ideas
+- **[GitHub Issues](https://github.com/CryptVenture/Comms/issues)** - Report bugs and request features
+- **[GitHub Discussions](https://github.com/CryptVenture/Comms/discussions)** - Ask questions and share ideas
 - **[npm Package](https://www.npmjs.com/package/@webventures/comms)** - View on npm registry
 - **[Documentation](./docs/README.md)** - Complete guides and API reference
 
@@ -1016,7 +1016,7 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 ## 🔗 Related Projects
 
 - **[Notification Catcher](https://github.com/notifme/catcher)** - Local notification testing tool
-- **[WebVentures Platform](https://webventures.io)** - Complete communication platform (coming soon)
+- **[WebVentures Platform](https://webventures.co)** - Complete communication platform (coming soon)
 
 ---
 
@@ -1024,6 +1024,6 @@ MIT License - see [LICENSE](./LICENSE) file for details.
 
 **Built with ❤️ by the WebVentures team**
 
-[Website](https://webventures.io) • [GitHub](https://github.com/cryptventure/comms) • [npm](https://www.npmjs.com/package/@webventures/comms)
+[Website](https://webventures.co) • [GitHub](https://github.com/CryptVenture/Comms) • [npm](https://www.npmjs.com/package/@webventures/comms)
 
 </div>

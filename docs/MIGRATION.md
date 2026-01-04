@@ -860,8 +860,8 @@ If you encounter issues during migration:
 
 1. Check the [API documentation](./API.md)
 2. Review [examples](./EXAMPLES.md)
-3. Search [GitHub issues](https://github.com/cryptventure/webventures-comms/issues)
-4. Ask on [GitHub Discussions](https://github.com/cryptventure/webventures-comms/discussions)
+3. Search [GitHub issues](https://github.com/CryptVenture/Comms/issues)
+4. Ask on [GitHub Discussions](https://github.com/CryptVenture/Comms/discussions)
 
 ---
 

@@ -890,8 +890,8 @@ COMMS_CATCHER_OPTIONS=smtp://127.0.0.1:3025?ignoreTLS=true node your-app.js
 
 ## Support & Community
 
-- [GitHub Issues](https://github.com/cryptventure/webventures-comms/issues)
-- [GitHub Discussions](https://github.com/cryptventure/webventures-comms/discussions)
+- [GitHub Issues](https://github.com/CryptVenture/Comms/issues)
+- [GitHub Discussions](https://github.com/CryptVenture/Comms/discussions)
 - [npm Package](https://www.npmjs.com/package/@webventures/comms)
 
 ## License
