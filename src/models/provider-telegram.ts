@@ -9,20 +9,7 @@
  * @module provider-telegram
  */
 
-// TODO: Import from './notification-request' once TelegramRequest is added (subtask 1.2)
-// import type { TelegramRequest } from './notification-request'
-
-/**
- * Temporary placeholder type for TelegramRequest.
- * This will be replaced with the proper import from './notification-request'
- * after subtask 1.2 is complete.
- */
-interface TelegramRequest {
-  chatId: string
-  text: string
-  parseMode?: 'HTML' | 'Markdown' | 'MarkdownV2'
-  [key: string]: unknown
-}
+import type { TelegramRequest } from './notification-request'
 
 /**
  * Logger provider for development and testing.
