@@ -1,6 +1,6 @@
 # API Reference
 
-Complete API documentation for WebVentures Comms SDK v2.0.0.
+Complete API documentation for WebVentures Comms SDK v2.0.1.
 
 ## Table of Contents
 
@@ -675,10 +675,10 @@ const slackRequest: SlackRequest = {
     {
       color: 'good',
       title: 'Production Deploy',
-      text: 'Version 2.0.0 is live',
+      text: 'Version 2.0.1 is live',
       fields: [
         { title: 'Environment', value: 'Production', short: true },
-        { title: 'Version', value: '2.0.0', short: true },
+        { title: 'Version', value: '2.0.1', short: true },
       ],
       actions: [
         {

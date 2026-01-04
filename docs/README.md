@@ -1,4 +1,4 @@
-# WebVentures Comms SDK v2.0.0 - Complete Documentation
+# WebVentures Comms SDK v2.0.1 - Complete Documentation
 
 > Unified notification SDK for Node.js, Next.js 16+, React 19, React Native, and Expo
 
@@ -322,10 +322,10 @@ await comms.send({
       {
         color: 'good',
         title: 'Production Deployment',
-        text: 'Version 2.0.0 is now live',
+        text: 'Version 2.0.1 is now live',
         fields: [
           { title: 'Environment', value: 'Production', short: true },
-          { title: 'Version', value: '2.0.0', short: true },
+          { title: 'Version', value: '2.0.1', short: true },
         ],
       },
     ],
@@ -884,7 +884,7 @@ COMMS_CATCHER_OPTIONS=smtp://127.0.0.1:3025?ignoreTLS=true node your-app.js
 - [API Reference](./API.md) - Complete API documentation
 - [Framework Guides](./FRAMEWORKS.md) - Next.js, React, React Native, Expo integration
 - [Provider Configuration](./PROVIDERS.md) - Detailed provider setup for all channels
-- [Migration Guide](./MIGRATION.md) - Upgrading from v1.x to v2.0.0
+- [Migration Guide](./MIGRATION.md) - Upgrading from v1.x to v2.0.1
 - [Architecture](./ARCHITECTURE.md) - Technical architecture and design patterns
 - [Examples](./EXAMPLES.md) - Comprehensive code examples
 

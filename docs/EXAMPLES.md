@@ -1,6 +1,6 @@
 # Comprehensive Examples
 
-Complete code examples for WebVentures Comms SDK v2.0.0 covering all features and use cases.
+Complete code examples for WebVentures Comms SDK v2.0.1 covering all features and use cases.
 
 ## Table of Contents
 
