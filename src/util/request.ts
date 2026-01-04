@@ -1,5 +1,6 @@
 import { request as undiciRequest, Dispatcher } from 'undici'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import type { RetryOptions } from './retry'
 
 /**
  * Custom error class for HTTP request errors
@@ -34,6 +35,23 @@ export interface RequestOptions {
   // Undici-specific options
   maxRedirections?: number
   throwOnError?: boolean
+  /**
+   * Optional retry configuration for automatic request retry with exponential backoff.
+   * When provided, failed requests will be retried according to the specified options.
+   * If not provided, no retries will occur (backward compatible).
+   *
+   * @example
+   * ```typescript
+   * const response = await request('https://api.example.com/data', {
+   *   retry: {
+   *     maxRetries: 3,
+   *     baseDelay: 1000,
+   *     retryableStatusCodes: [429, 500, 502, 503, 504]
+   *   }
+   * })
+   * ```
+   */
+  retry?: RetryOptions
 }
 
 /**
