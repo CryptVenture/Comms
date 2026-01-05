@@ -66,8 +66,12 @@ export default class SmsSevenProvider {
   /**
    * Create a new Seven SMS provider
    * @param config - Configuration with apiKey
+   * @throws {ProviderError} If apiKey is missing
    */
   constructor({ apiKey }: SevenConfig) {
+    if (!apiKey) {
+      throw new ProviderError('Seven requires apiKey', this.id, 'sms', 'MISSING_CONFIG')
+    }
     this.apiKey = apiKey
   }
 

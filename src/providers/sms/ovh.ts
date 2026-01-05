@@ -90,8 +90,17 @@ export default class SmsOvhProvider {
   /**
    * Create a new OVH SMS provider
    * @param config - Configuration with OVH API credentials
+   * @throws {ProviderError} If any required configuration is missing
    */
   constructor({ appKey, appSecret, consumerKey, account, host }: OvhConfig) {
+    if (!appKey || !appSecret || !consumerKey || !account || !host) {
+      throw new ProviderError(
+        'OVH requires appKey, appSecret, consumerKey, account, and host',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.credentials = { appKey, appSecret, consumerKey, account, host }
   }
 

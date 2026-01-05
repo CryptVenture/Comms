@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import SlackProvider from '../../../src/providers/slack/slack'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,36 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Slack Provider - Constructor Validation', () => {
+  test('throws ProviderError when webhookUrl is missing', () => {
+    expect(() => {
+      new SlackProvider({ webhookUrl: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new SlackProvider({ webhookUrl: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_WEBHOOK_URL')
+      expect((error as ProviderError).providerId).toBe('slack-provider')
+      expect((error as ProviderError).channel).toBe('slack')
+    }
+  })
+
+  test('throws ProviderError when webhookUrl is undefined', () => {
+    expect(() => {
+      new SlackProvider({} as any)
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid webhookUrl', () => {
+    const provider = new SlackProvider({
+      webhookUrl: 'https://hooks.slack.com/services/T00/B00/XXX',
+    })
+    expect(provider.id).toBe('slack-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

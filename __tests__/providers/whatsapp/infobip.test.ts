@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import WhatsappInfobipProvider from '../../../src/providers/whatsapp/infobip'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,50 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Infobip WhatsApp Provider - Constructor Validation', () => {
+  test('throws ProviderError when baseUrl is missing', () => {
+    expect(() => {
+      new WhatsappInfobipProvider({ baseUrl: '', apiKey: 'key' })
+    }).toThrow(ProviderError)
+
+    try {
+      new WhatsappInfobipProvider({ baseUrl: '', apiKey: 'key' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+      expect((error as ProviderError).providerId).toBe('whatsapp-infobip-provider')
+      expect((error as ProviderError).channel).toBe('whatsapp')
+    }
+  })
+
+  test('throws ProviderError when apiKey is missing', () => {
+    expect(() => {
+      new WhatsappInfobipProvider({ baseUrl: 'https://api.infobip.com', apiKey: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new WhatsappInfobipProvider({ baseUrl: 'https://api.infobip.com', apiKey: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+    }
+  })
+
+  test('throws ProviderError when both baseUrl and apiKey are missing', () => {
+    expect(() => {
+      new WhatsappInfobipProvider({ baseUrl: '', apiKey: '' })
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new WhatsappInfobipProvider({
+      baseUrl: 'https://api.infobip.com',
+      apiKey: 'test-key',
+    })
+    expect(provider.id).toBe('whatsapp-infobip-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

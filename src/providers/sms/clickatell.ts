@@ -71,8 +71,12 @@ export default class SmsClickatellProvider {
   /**
    * Create a new Clickatell SMS provider
    * @param config - Configuration with apiKey for one-way integration
+   * @throws {ProviderError} If apiKey is missing
    */
   constructor(config: ClickatellConfig) {
+    if (!config.apiKey) {
+      throw new ProviderError('Clickatell requires apiKey', this.id, 'sms', 'MISSING_CONFIG')
+    }
     this.apiKey = config.apiKey
   }
 

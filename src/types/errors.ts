@@ -38,11 +38,58 @@ export class ProviderError extends CommsError {
 
 /**
  * Configuration error
+ *
+ * Thrown when SDK configuration is invalid. Provides detailed context about
+ * which channels, providers, and fields have issues.
+ *
+ * @example
+ * ```typescript
+ * try {
+ *   const sdk = new CommsSdk({ channels: { email: { providers: [{ type: 'sendgrid' }] } } })
+ * } catch (error) {
+ *   if (error instanceof ConfigurationError) {
+ *     console.log('Channel:', error.channel)       // 'email'
+ *     console.log('Provider:', error.providerType) // 'sendgrid'
+ *     console.log('Missing:', error.missingFields) // ['apiKey']
+ *     console.log('All issues:', error.issues)     // Full list of ValidationIssue
+ *   }
+ * }
+ * ```
  */
 export class ConfigurationError extends CommsError {
-  constructor(message: string, code?: string, cause?: unknown) {
+  /**
+   * The channel where the first issue was found (convenience property)
+   */
+  public readonly channel?: string
+
+  /**
+   * The provider type of the first issue (convenience property)
+   */
+  public readonly providerType?: string
+
+  /**
+   * Missing fields from the first issue (convenience property)
+   */
+  public readonly missingFields?: string[]
+
+  /**
+   * All validation issues found during configuration validation
+   */
+  public readonly issues?: ValidationIssue[]
+
+  constructor(message: string, code?: string, cause?: unknown, issues?: ValidationIssue[]) {
     super(message, code, cause)
     this.name = 'ConfigurationError'
+    this.issues = issues
+
+    // Set convenience properties from the first issue
+    const firstIssue = issues?.[0]
+    if (firstIssue) {
+      this.channel = firstIssue.channel
+      this.providerType = firstIssue.providerType
+      this.missingFields = firstIssue.missingFields
+    }
+
     Object.setPrototypeOf(this, ConfigurationError.prototype)
   }
 }
@@ -92,4 +139,28 @@ export function isCommsError(error: unknown): error is CommsError {
  */
 export function isProviderError(error: unknown): error is ProviderError {
   return error instanceof ProviderError
+}
+
+/**
+ * Represents a single validation issue found during configuration validation
+ */
+export interface ValidationIssue {
+  /** The channel where the issue was found (e.g., 'email', 'sms') */
+  channel: string
+  /** The provider type (e.g., 'sendgrid', 'twilio') */
+  providerType: string
+  /** The specific field(s) that are missing or invalid */
+  missingFields: string[]
+  /** A human-readable description of the issue */
+  message: string
+}
+
+/**
+ * Represents the result of configuration validation
+ */
+export interface ValidationResult {
+  /** Whether the configuration is valid */
+  valid: boolean
+  /** List of validation issues found */
+  issues: ValidationIssue[]
 }

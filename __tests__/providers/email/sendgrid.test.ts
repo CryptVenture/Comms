@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import EmailSendGridProvider from '../../../src/providers/email/sendgrid'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,34 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('SendGrid Email Provider - Constructor Validation', () => {
+  test('throws ProviderError when apiKey is missing', () => {
+    expect(() => {
+      new EmailSendGridProvider({ apiKey: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new EmailSendGridProvider({ apiKey: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_API_KEY')
+      expect((error as ProviderError).providerId).toBe('email-sendgrid-provider')
+      expect((error as ProviderError).channel).toBe('email')
+    }
+  })
+
+  test('throws ProviderError when apiKey is undefined', () => {
+    expect(() => {
+      new EmailSendGridProvider({} as any)
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new EmailSendGridProvider({ apiKey: 'test-key' })
+    expect(provider.id).toBe('email-sendgrid-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

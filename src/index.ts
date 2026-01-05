@@ -9,6 +9,9 @@ import dedupe from './util/dedupe'
 import logger from './util/logger'
 import providerFactory from './providers'
 import strategyProvidersFactory from './strategies/providers'
+import ConfigValidator from './util/config-validator'
+import { ConfigurationError } from './types/errors'
+import type { ValidationResult } from './util/config-validator'
 import type { CommsSdkConfig, ChannelConfig, ProviderConfig } from './types/config'
 import type { ChannelType } from './types'
 import type { NotificationRequest } from './models/notification-request'
@@ -81,6 +84,8 @@ export {
   isCommsError,
   isProviderError,
 } from './types/errors'
+
+export type { ValidationIssue, ValidationResult } from './types/errors'
 
 // Retry utilities
 export {
@@ -189,6 +194,18 @@ export default class CommsSdk {
    * @param options - Configuration options
    */
   constructor(options: CommsSdkConfig) {
+    // Validate configuration before processing
+    const validationResult = this.validateConfig(options)
+    if (!validationResult.valid) {
+      const validator = new ConfigValidator()
+      throw new ConfigurationError(
+        validator.formatErrorMessage(validationResult.issues),
+        'INVALID_CONFIG',
+        undefined, // cause
+        validationResult.issues
+      )
+    }
+
     const mergedOptions = this.mergeWithDefaultConfig(options)
     const providers = providerFactory(mergedOptions.channels)
     // Filter out undefined channels before passing to strategy factory
@@ -283,6 +300,30 @@ export default class CommsSdk {
             ...customChannelConfigs,
           }) as Required<CommsSdkConfig>['channels'],
     }
+  }
+
+  /**
+   * Validate SDK configuration
+   *
+   * Uses ConfigValidator to validate all provider configurations in the SDK config.
+   * This method checks for missing required fields and invalid configurations.
+   *
+   * @param config - The SDK configuration to validate
+   * @returns Validation result containing any issues found
+   *
+   * @example
+   * ```typescript
+   * const result = sdk.validateConfig(config)
+   * if (!result.valid) {
+   *   console.error('Configuration errors:', result.issues)
+   * }
+   * ```
+   *
+   * @internal This method is exposed for testing purposes
+   */
+  protected validateConfig(config: CommsSdkConfig): ValidationResult {
+    const validator = new ConfigValidator()
+    return validator.validate(config)
   }
 
   /**

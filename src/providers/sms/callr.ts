@@ -71,8 +71,12 @@ export default class SmsCallrProvider {
   /**
    * Create a new CALLR SMS provider
    * @param config - Configuration with login and password
+   * @throws {ProviderError} If login or password is missing
    */
   constructor({ login, password }: CallrConfig) {
+    if (!login || !password) {
+      throw new ProviderError('CALLR requires login and password', this.id, 'sms', 'MISSING_CONFIG')
+    }
     this.apiKey = Buffer.from(`${login}:${password}`).toString('base64')
   }
 

@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import EmailMailgunProvider from '../../../src/providers/email/mailgun'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,47 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Mailgun Email Provider - Constructor Validation', () => {
+  test('throws ProviderError when apiKey is missing', () => {
+    expect(() => {
+      new EmailMailgunProvider({ apiKey: '', domainName: 'example.com' })
+    }).toThrow(ProviderError)
+
+    try {
+      new EmailMailgunProvider({ apiKey: '', domainName: 'example.com' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+      expect((error as ProviderError).providerId).toBe('email-mailgun-provider')
+      expect((error as ProviderError).channel).toBe('email')
+    }
+  })
+
+  test('throws ProviderError when domainName is missing', () => {
+    expect(() => {
+      new EmailMailgunProvider({ apiKey: 'key', domainName: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new EmailMailgunProvider({ apiKey: 'key', domainName: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+    }
+  })
+
+  test('throws ProviderError when both apiKey and domainName are missing', () => {
+    expect(() => {
+      new EmailMailgunProvider({ apiKey: '', domainName: '' })
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new EmailMailgunProvider({ apiKey: 'key', domainName: 'example.com' })
+    expect(provider.id).toBe('email-mailgun-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

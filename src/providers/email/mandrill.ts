@@ -93,7 +93,7 @@ export default class EmailMandrillProvider {
    */
   constructor(config: MandrillConfig) {
     if (!config.apiKey) {
-      throw new ProviderError('Mandrill API key is required', this.id, 'email', 'MISSING_API_KEY')
+      throw new ProviderError('Mandrill API key is required', this.id, 'email', 'MISSING_CONFIG')
     }
     this.apiKey = config.apiKey
   }

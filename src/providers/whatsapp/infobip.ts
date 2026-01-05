@@ -90,7 +90,7 @@ export default class WhatsappInfobipProvider {
         'Infobip baseUrl and apiKey are required',
         this.id,
         'whatsapp',
-        'MISSING_CREDENTIALS'
+        'MISSING_CONFIG'
       )
     }
 

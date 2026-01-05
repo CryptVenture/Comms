@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import VoiceTwilioProvider from '../../../src/providers/voice/twilio'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,47 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Twilio Voice Provider - Constructor Validation', () => {
+  test('throws ProviderError when accountSid is missing', () => {
+    expect(() => {
+      new VoiceTwilioProvider({ accountSid: '', authToken: 'token' })
+    }).toThrow(ProviderError)
+
+    try {
+      new VoiceTwilioProvider({ accountSid: '', authToken: 'token' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+      expect((error as ProviderError).providerId).toBe('voice-twilio-provider')
+      expect((error as ProviderError).channel).toBe('voice')
+    }
+  })
+
+  test('throws ProviderError when authToken is missing', () => {
+    expect(() => {
+      new VoiceTwilioProvider({ accountSid: 'account', authToken: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new VoiceTwilioProvider({ accountSid: 'account', authToken: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+    }
+  })
+
+  test('throws ProviderError when both accountSid and authToken are missing', () => {
+    expect(() => {
+      new VoiceTwilioProvider({ accountSid: '', authToken: '' })
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new VoiceTwilioProvider({ accountSid: 'account', authToken: 'token' })
+    expect(provider.id).toBe('voice-twilio-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

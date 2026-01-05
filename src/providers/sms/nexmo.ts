@@ -77,8 +77,17 @@ export default class SmsNexmoProvider {
   /**
    * Create a new Nexmo SMS provider
    * @param config - Configuration with apiKey and apiSecret
+   * @throws {ProviderError} If apiKey or apiSecret is missing
    */
   constructor(config: NexmoConfig) {
+    if (!config.apiKey || !config.apiSecret) {
+      throw new ProviderError(
+        'Nexmo requires apiKey and apiSecret',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.credentials = { api_key: config.apiKey, api_secret: config.apiSecret }
   }
 

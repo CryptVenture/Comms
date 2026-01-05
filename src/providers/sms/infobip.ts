@@ -92,8 +92,17 @@ export default class SmsInfobipProvider {
   /**
    * Create a new Infobip SMS provider
    * @param config - Configuration with username and password
+   * @throws {ProviderError} If username or password is missing
    */
   constructor({ username, password }: InfobipConfig) {
+    if (!username || !password) {
+      throw new ProviderError(
+        'Infobip requires username and password',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.apiKey = Buffer.from(`${username}:${password}`).toString('base64')
   }
 

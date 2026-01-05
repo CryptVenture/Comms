@@ -97,7 +97,7 @@ export default class EmailPostmarkProvider {
         'Postmark server token is required',
         this.id,
         'email',
-        'MISSING_API_KEY'
+        'MISSING_CONFIG'
       )
     }
     this.serverToken = config.serverToken

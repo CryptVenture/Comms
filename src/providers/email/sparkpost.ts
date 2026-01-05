@@ -96,7 +96,7 @@ export default class EmailSparkPostProvider {
    */
   constructor(config: SparkPostConfig) {
     if (!config.apiKey) {
-      throw new ProviderError('SparkPost API key is required', this.id, 'email', 'MISSING_API_KEY')
+      throw new ProviderError('SparkPost API key is required', this.id, 'email', 'MISSING_CONFIG')
     }
     this.apiKey = config.apiKey
   }

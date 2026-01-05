@@ -60,10 +60,10 @@ export default class VoiceTwilioProvider {
   constructor({ accountSid, authToken }: TwilioConfig) {
     if (!accountSid || !authToken) {
       throw new ProviderError(
-        'Twilio accountSid and authToken are required',
+        'Twilio requires accountSid and authToken',
         this.id,
         'voice',
-        'MISSING_CREDENTIALS'
+        'MISSING_CONFIG'
       )
     }
 

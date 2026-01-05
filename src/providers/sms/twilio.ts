@@ -55,8 +55,17 @@ export default class SmsTwilioProvider {
   /**
    * Create a new Twilio SMS provider
    * @param config - Configuration with accountSid and authToken
+   * @throws {ProviderError} If accountSid or authToken is missing
    */
   constructor({ accountSid, authToken }: TwilioConfig) {
+    if (!accountSid || !authToken) {
+      throw new ProviderError(
+        'Twilio requires accountSid and authToken',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.accountSid = accountSid
     this.apiKey = Buffer.from(`${accountSid}:${authToken}`).toString('base64')
   }

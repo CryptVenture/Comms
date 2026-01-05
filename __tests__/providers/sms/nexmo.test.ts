@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import SmsNexmoProvider from '../../../src/providers/sms/nexmo'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,47 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Nexmo SMS Provider - Constructor Validation', () => {
+  test('throws ProviderError when apiKey is missing', () => {
+    expect(() => {
+      new SmsNexmoProvider({ apiKey: '', apiSecret: 'secret' })
+    }).toThrow(ProviderError)
+
+    try {
+      new SmsNexmoProvider({ apiKey: '', apiSecret: 'secret' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+      expect((error as ProviderError).providerId).toBe('sms-nexmo-provider')
+      expect((error as ProviderError).channel).toBe('sms')
+    }
+  })
+
+  test('throws ProviderError when apiSecret is missing', () => {
+    expect(() => {
+      new SmsNexmoProvider({ apiKey: 'key', apiSecret: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new SmsNexmoProvider({ apiKey: 'key', apiSecret: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+    }
+  })
+
+  test('throws ProviderError when both apiKey and apiSecret are missing', () => {
+    expect(() => {
+      new SmsNexmoProvider({ apiKey: '', apiSecret: '' })
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new SmsNexmoProvider({ apiKey: 'key', apiSecret: 'secret' })
+    expect(provider.id).toBe('sms-nexmo-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

@@ -1,5 +1,7 @@
-import { vi, test, expect } from 'vitest'
+import { vi, test, expect, describe } from 'vitest'
 import CommsSdk from '../../../src'
+import SmsTwilioProvider from '../../../src/providers/sms/twilio'
+import { ProviderError } from '../../../src/types/errors'
 import mockHttp, { mockResponse } from '../mockHttp.test'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -7,6 +9,47 @@ vi.mock('../../../src/util/logger', () => ({
     warn: vi.fn(),
   },
 }))
+
+describe('Twilio SMS Provider - Constructor Validation', () => {
+  test('throws ProviderError when accountSid is missing', () => {
+    expect(() => {
+      new SmsTwilioProvider({ accountSid: '', authToken: 'token' })
+    }).toThrow(ProviderError)
+
+    try {
+      new SmsTwilioProvider({ accountSid: '', authToken: 'token' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+      expect((error as ProviderError).providerId).toBe('sms-twilio-provider')
+      expect((error as ProviderError).channel).toBe('sms')
+    }
+  })
+
+  test('throws ProviderError when authToken is missing', () => {
+    expect(() => {
+      new SmsTwilioProvider({ accountSid: 'account', authToken: '' })
+    }).toThrow(ProviderError)
+
+    try {
+      new SmsTwilioProvider({ accountSid: 'account', authToken: '' })
+    } catch (error) {
+      expect(error).toBeInstanceOf(ProviderError)
+      expect((error as ProviderError).code).toBe('MISSING_CONFIG')
+    }
+  })
+
+  test('throws ProviderError when both accountSid and authToken are missing', () => {
+    expect(() => {
+      new SmsTwilioProvider({ accountSid: '', authToken: '' })
+    }).toThrow(ProviderError)
+  })
+
+  test('creates provider successfully with valid config', () => {
+    const provider = new SmsTwilioProvider({ accountSid: 'account', authToken: 'token' })
+    expect(provider.id).toBe('sms-twilio-provider')
+  })
+})
 
 const sdk = new CommsSdk({
   channels: {

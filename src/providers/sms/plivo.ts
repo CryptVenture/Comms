@@ -67,8 +67,17 @@ export default class SmsPlivoProvider {
   /**
    * Create a new Plivo SMS provider
    * @param config - Configuration with authId and authToken
+   * @throws {ProviderError} If authId or authToken is missing
    */
   constructor({ authId, authToken }: PlivoConfig) {
+    if (!authId || !authToken) {
+      throw new ProviderError(
+        'Plivo requires authId and authToken',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.authId = authId
     this.apiKey = Buffer.from(`${authId}:${authToken}`).toString('base64')
   }

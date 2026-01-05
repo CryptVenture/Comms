@@ -62,8 +62,17 @@ export default class Sms46elksProvider {
   /**
    * Create a new 46elks SMS provider
    * @param config - Configuration with apiUsername and apiPassword
+   * @throws {ProviderError} If apiUsername or apiPassword is missing
    */
   constructor({ apiUsername, apiPassword }: Elks46Config) {
+    if (!apiUsername || !apiPassword) {
+      throw new ProviderError(
+        '46elks requires apiUsername and apiPassword',
+        this.id,
+        'sms',
+        'MISSING_CONFIG'
+      )
+    }
     this.apiKey = Buffer.from(`${apiUsername}:${apiPassword}`).toString('base64')
   }
 

@@ -74,6 +74,16 @@ export default class WebpushGcmProvider {
    * @throws {ProviderError} If configuration is invalid
    */
   constructor({ gcmAPIKey, vapidDetails, ttl, headers }: GcmConfig) {
+    // Require at least one authentication method
+    if (!gcmAPIKey && !vapidDetails) {
+      throw new ProviderError(
+        'Webpush requires either gcmAPIKey or vapidDetails',
+        this.id,
+        'webpush',
+        'MISSING_CONFIG'
+      )
+    }
+
     this.options = { TTL: ttl, headers }
 
     try {
@@ -89,7 +99,7 @@ export default class WebpushGcmProvider {
             'VAPID details must include subject, publicKey, and privateKey',
             this.id,
             'webpush',
-            'INVALID_VAPID_CONFIG'
+            'MISSING_CONFIG'
           )
         }
 
