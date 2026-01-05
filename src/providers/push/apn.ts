@@ -1,5 +1,5 @@
 import PushNotifications from 'node-pushnotifications'
-import { ProviderError } from '../../types/errors'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { PushRequest } from '../../models/notification-request'
 
 /**
@@ -54,11 +54,11 @@ export default class PushApnProvider {
    * Creates a new APN push notification provider
    *
    * @param config - APN configuration
-   * @throws {Error} If configuration is invalid
+   * @throws {ConfigurationError} If configuration is invalid
    */
   constructor(config: ApnConfig) {
     if (!config) {
-      throw new Error('APN provider requires configuration')
+      throw new ConfigurationError('APN provider requires configuration', 'APN_CONFIG_MISSING')
     }
 
     // Validate authentication method
@@ -67,9 +67,10 @@ export default class PushApnProvider {
     const hasPfx = config.pfx
 
     if (!hasToken && !hasCert && !hasPfx) {
-      throw new Error(
+      throw new ConfigurationError(
         'APN provider requires either token authentication (key, keyId, teamId), ' +
-          'certificate authentication (cert, key), or pfx file'
+          'certificate authentication (cert, key), or pfx file',
+        'APN_AUTH_MISSING'
       )
     }
 

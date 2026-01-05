@@ -63,6 +63,7 @@
  */
 
 import strategyFallback from './fallback'
+import { ConfigurationError } from '../../types/errors'
 import type { Provider } from '../../types'
 import type { StrategyFunction } from '../../types/strategies'
 
@@ -115,7 +116,7 @@ function rotate<T>(arr: T[], forward: boolean): T[] {
  * @param providers - Array of providers to rotate through
  * @returns Send function that implements round-robin with fallback logic
  *
- * @throws Error if providers array is empty
+ * @throws {ConfigurationError} If providers array is empty
  * @throws Error from last provider if all providers fail on a send attempt
  *
  * @remarks
@@ -129,7 +130,10 @@ const strategyRoundRobin: StrategyFunction = <TRequest = unknown>(
 ) => {
   // Validate providers array
   if (!providers || providers.length === 0) {
-    throw new Error('Round-robin strategy requires at least one provider')
+    throw new ConfigurationError(
+      'Round-robin strategy requires at least one provider',
+      'ROUNDROBIN_REQUIRES_PROVIDER'
+    )
   }
 
   // Initialize rotation state with backward rotation

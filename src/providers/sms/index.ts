@@ -10,6 +10,7 @@ import SmsPlivoProvider from './plivo'
 import SmsTwilioProvider from './twilio'
 import SmsSevenProvider from './seven'
 import type { SmsRequest } from '../../models/notification-request'
+import { ConfigurationError } from '../../types/errors'
 
 /**
  * SMS Provider interface that all SMS providers must implement
@@ -41,7 +42,7 @@ export interface SmsProviderConfig {
  *
  * @param config - Configuration object with type and provider-specific options
  * @returns An instance of the requested SMS provider
- * @throws {Error} If the provider type is unknown
+ * @throws {ConfigurationError} If the provider type is unknown
  *
  * @example
  * ```typescript
@@ -100,6 +101,6 @@ export default function factory({ type, ...config }: SmsProviderConfig): SmsProv
       return new SmsSevenProvider(config as never)
 
     default:
-      throw new Error(`Unknown sms provider "${type}".`)
+      throw new ConfigurationError(`Unknown sms provider "${type}".`, 'SMS_UNKNOWN_PROVIDER')
   }
 }

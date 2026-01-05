@@ -4,6 +4,7 @@
  */
 
 import type { CommsSdkConfig } from '../types/config'
+import { NetworkError } from '../types/errors'
 import { CommsSdk } from '../index'
 
 /**
@@ -66,6 +67,9 @@ export function getReactNativePlatform(): 'ios' | 'android' | 'unknown' {
  * Backend API helper for React Native apps
  * Use this to call your backend API that uses WebVentures Comms SDK server-side
  *
+ * @param baseUrl - The base URL of the backend API
+ * @returns Client object with send method for notifications
+ *
  * @example
  * import { createCommsBackendClient } from '@webventures/comms/adapters'
  *
@@ -77,6 +81,13 @@ export function getReactNativePlatform(): 'ios' | 'android' | 'unknown' {
  */
 export function createCommsBackendClient(baseUrl: string) {
   return {
+    /**
+     * Send a notification through the backend API
+     *
+     * @param notification - The notification payload to send
+     * @returns Promise resolving to the server response
+     * @throws {NetworkError} If the network request fails
+     */
     async send(notification: unknown) {
       const response = await globalThis.fetch(`${baseUrl}/notifications/send`, {
         method: 'POST',
@@ -87,7 +98,10 @@ export function createCommsBackendClient(baseUrl: string) {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to send notification: ${response.statusText}`)
+        throw new NetworkError(
+          `Failed to send notification: ${response.statusText}`,
+          response.status
+        )
       }
 
       return response.json()

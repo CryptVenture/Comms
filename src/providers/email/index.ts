@@ -9,6 +9,7 @@ import EmailSendmailProvider from './sendmail'
 import EmailSmtpProvider from './smtp'
 import EmailSparkPostProvider from './sparkpost'
 import type { EmailRequest } from '../../models/notification-request'
+import { ConfigurationError } from '../../types/errors'
 
 /**
  * Email provider interface
@@ -50,7 +51,7 @@ export interface EmailProviderType {
  *
  * @param config - Provider configuration object with type and provider-specific settings
  * @returns An instance of the specified email provider
- * @throws {Error} If the provider type is unknown
+ * @throws {ConfigurationError} If the provider type is unknown
  */
 export default function factory({
   type,
@@ -98,6 +99,6 @@ export default function factory({
       return new EmailSparkPostProvider(config as never)
 
     default:
-      throw new Error(`Unknown email provider "${type}".`)
+      throw new ConfigurationError(`Unknown email provider "${type}".`, 'EMAIL_UNKNOWN_PROVIDER')
   }
 }

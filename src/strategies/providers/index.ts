@@ -60,6 +60,7 @@ import strategyFallback from './fallback'
 import strategyNoFallback from './no-fallback'
 import strategyRoundRobin from './roundrobin'
 import strategyWeighted from './weighted'
+import { ConfigurationError } from '../../types/errors'
 import type { MultiProviderStrategyType } from '../../types'
 import type { ChannelConfig } from '../../types/config'
 import type { StrategyFunction } from '../../types/strategies'
@@ -91,7 +92,7 @@ export type StrategyMap = Record<string, StrategyFunction>
  *
  * @param strategy - Strategy to validate
  * @param channelName - Channel name for error messages
- * @throws Error if strategy is invalid
+ * @throws {ConfigurationError} if strategy is invalid
  *
  * @internal
  */
@@ -100,7 +101,7 @@ function validateStrategy(
   channelName: string
 ): void {
   if (!strategy) {
-    throw new Error(
+    throw new ConfigurationError(
       `Channel "${channelName}" is missing multiProviderStrategy. ` +
         `Strategy must be a function or one of: ${strategies.join(', ')}`
     )
@@ -110,7 +111,7 @@ function validateStrategy(
     typeof strategy !== 'function' &&
     !strategies.includes(strategy as MultiProviderStrategyType)
   ) {
-    throw new Error(
+    throw new ConfigurationError(
       `"${strategy}" is not a valid strategy for channel "${channelName}". ` +
         `Strategy must be a function or one of: ${strategies.join(', ')}`
     )
@@ -146,8 +147,8 @@ function resolveStrategy(strategy: MultiProviderStrategyType | StrategyFunction)
  * @param channels - Channel configurations object
  * @returns Map of channel names to their strategy functions
  *
- * @throws Error if a channel's strategy is invalid
- * @throws Error if a channel is missing multiProviderStrategy
+ * @throws {ConfigurationError} if a channel's strategy is invalid
+ * @throws {ConfigurationError} if a channel is missing multiProviderStrategy
  *
  * @example
  * ```typescript
@@ -173,7 +174,7 @@ function resolveStrategy(strategy: MultiProviderStrategyType | StrategyFunction)
 export default function factory(channels: Record<string, ChannelConfig>): StrategyMap {
   // Validate input
   if (!channels || typeof channels !== 'object') {
-    throw new Error('Channels configuration must be an object')
+    throw new ConfigurationError('Channels configuration must be an object')
   }
 
   // Build strategy map from channel configurations

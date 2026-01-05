@@ -5,6 +5,7 @@ import PushLoggerProvider from '../logger'
 import PushNotificationCatcherProvider from './notificationCatcher'
 import PushWnsProvider, { type WnsConfig } from './wns'
 import type { PushRequest } from '../../models/notification-request'
+import { ConfigurationError } from '../../types/errors'
 
 /**
  * Push Provider Interface
@@ -97,7 +98,7 @@ export interface WnsProviderConfig extends WnsConfig {
  *
  * @param config - Provider configuration
  * @returns Push provider instance
- * @throws {Error} If the provider type is unknown
+ * @throws {ConfigurationError} If the provider type is unknown
  *
  * @example
  * ```typescript
@@ -184,7 +185,10 @@ export default function factory(config: PushProviderConfig): PushProviderType {
 
     default:
       // TypeScript will ensure this is never reached if all cases are handled
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      throw new Error(`Unknown push provider "${(config as any).type}".`)
+      throw new ConfigurationError(
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        `Unknown push provider "${(config as any).type}".`,
+        'PUSH_UNKNOWN_PROVIDER'
+      )
   }
 }

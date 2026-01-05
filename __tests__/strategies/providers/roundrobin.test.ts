@@ -1,6 +1,7 @@
 import { vi, test, expect } from 'vitest'
 import strategyRoundrobin from '../../../src/strategies/providers/roundrobin'
 import logger from '../../../src/util/logger'
+import { ConfigurationError } from '../../../src/types/errors'
 
 vi.mock('../../../src/util/logger', () => ({
   default: {
@@ -95,4 +96,16 @@ test('Roundrobin strategy should throw an error if all providers failed.', async
   expect(error).toEqual(
     expect.objectContaining({ message: 'error provider 3', providerId: 'sms-provider-3' })
   )
+})
+
+test('Roundrobin strategy should throw ConfigurationError when no providers are given.', () => {
+  expect(() => strategyRoundrobin([])).toThrow(ConfigurationError)
+  expect(() => strategyRoundrobin([])).toThrow(
+    'Round-robin strategy requires at least one provider'
+  )
+})
+
+test('Roundrobin strategy should throw ConfigurationError when providers array is null/undefined.', () => {
+  expect(() => strategyRoundrobin(null as any)).toThrow(ConfigurationError)
+  expect(() => strategyRoundrobin(undefined as any)).toThrow(ConfigurationError)
 })

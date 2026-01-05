@@ -1,5 +1,5 @@
 import PushNotifications from 'node-pushnotifications'
-import { ProviderError } from '../../types/errors'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { PushRequest } from '../../models/notification-request'
 
 /**
@@ -44,11 +44,18 @@ export default class PushFcmProvider {
    * @param config.id - Server key from Firebase Console (legacy) or service account key
    * @param config.phonegap - Whether to use phonegap mode (defaults to false)
    *
-   * @throws {Error} If configuration is invalid
+   * @throws {ConfigurationError} If configuration is invalid
    */
   constructor(config: FcmConfig) {
-    if (!config || !config.id) {
-      throw new Error('FCM provider requires an id (server key) in configuration')
+    if (!config) {
+      throw new ConfigurationError('FCM provider requires configuration', 'FCM_CONFIG_MISSING')
+    }
+
+    if (!config.id) {
+      throw new ConfigurationError(
+        'FCM provider requires an id (server key) in configuration',
+        'FCM_SERVER_KEY_MISSING'
+      )
     }
 
     this.transporter = new PushNotifications({

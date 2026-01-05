@@ -47,6 +47,7 @@
  */
 
 import logger from '../../util/logger'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { Provider } from '../../types'
 import type { ProviderSendResult } from '../../types/responses'
 import type { StrategyFunction } from '../../types/strategies'
@@ -57,6 +58,7 @@ import type { StrategyFunction } from '../../types/strategies'
  * @param providers - Array of providers to try in order
  * @param request - Request to send through providers
  * @returns Promise resolving to provider send result
+ * @throws {ProviderError} If no providers are available
  * @throws Error from the last provider if all providers fail
  *
  * @internal
@@ -70,7 +72,12 @@ async function recursiveTry<TRequest>(
 
   // Validate that we have a provider
   if (!current) {
-    throw new Error('No providers available')
+    throw new ProviderError(
+      'No providers available',
+      'fallback-strategy',
+      undefined,
+      'FALLBACK_NO_PROVIDERS'
+    )
   }
 
   try {
@@ -106,7 +113,7 @@ async function recursiveTry<TRequest>(
  * @param providers - Array of providers to use for sending
  * @returns Send function that implements fallback logic
  *
- * @throws Error if providers array is empty
+ * @throws {ConfigurationError} If providers array is empty
  * @throws Error from last provider if all providers fail
  */
 const strategyFallback: StrategyFunction = <TRequest = unknown>(
@@ -114,7 +121,10 @@ const strategyFallback: StrategyFunction = <TRequest = unknown>(
 ) => {
   // Validate providers array
   if (!providers || providers.length === 0) {
-    throw new Error('Fallback strategy requires at least one provider')
+    throw new ConfigurationError(
+      'Fallback strategy requires at least one provider',
+      'FALLBACK_REQUIRES_PROVIDER'
+    )
   }
 
   // Return the send function

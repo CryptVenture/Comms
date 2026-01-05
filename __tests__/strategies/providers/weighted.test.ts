@@ -1,6 +1,7 @@
 import { vi, test, expect, describe, beforeEach } from 'vitest'
 import strategyWeighted from '../../../src/strategies/providers/weighted'
 import logger from '../../../src/util/logger'
+import { ConfigurationError } from '../../../src/types/errors'
 import type { WeightedProvider } from '../../../src/types/strategies'
 
 vi.mock('../../../src/util/logger', () => ({
@@ -421,40 +422,46 @@ describe('Weighted Strategy', () => {
   })
 
   describe('error handling', () => {
-    test('should throw error when no providers are given', () => {
+    test('should throw ConfigurationError when no providers are given', () => {
+      expect(() => strategyWeighted([])).toThrow(ConfigurationError)
       expect(() => strategyWeighted([])).toThrow('Weighted strategy requires at least one provider')
     })
 
-    test('should throw error when providers array is null/undefined', () => {
+    test('should throw ConfigurationError when providers array is null/undefined', () => {
+      expect(() => strategyWeighted(null as any)).toThrow(ConfigurationError)
       expect(() => strategyWeighted(null as any)).toThrow(
         'Weighted strategy requires at least one provider'
       )
+      expect(() => strategyWeighted(undefined as any)).toThrow(ConfigurationError)
       expect(() => strategyWeighted(undefined as any)).toThrow(
         'Weighted strategy requires at least one provider'
       )
     })
 
-    test('should throw error for negative weights', () => {
+    test('should throw ConfigurationError for negative weights', () => {
       const providers: WeightedProvider<typeof request>[] = [
         { id: 'provider-1', send: async () => 'msg-1', weight: -10 },
       ]
 
+      expect(() => strategyWeighted(providers)).toThrow(ConfigurationError)
       expect(() => strategyWeighted(providers)).toThrow(
         'Provider "provider-1" must have a non-negative weight. Got: -10'
       )
     })
 
-    test('should throw error for non-numeric weights', () => {
+    test('should throw ConfigurationError for non-numeric weights', () => {
       const providers = [{ id: 'provider-1', send: async () => 'msg-1', weight: 'high' as any }]
 
+      expect(() => strategyWeighted(providers as any)).toThrow(ConfigurationError)
       expect(() => strategyWeighted(providers as any)).toThrow(
         'Provider "provider-1" must have a non-negative weight'
       )
     })
 
-    test('should throw error for undefined weights', () => {
+    test('should throw ConfigurationError for undefined weights', () => {
       const providers = [{ id: 'provider-1', send: async () => 'msg-1' }]
 
+      expect(() => strategyWeighted(providers as any)).toThrow(ConfigurationError)
       expect(() => strategyWeighted(providers as any)).toThrow(
         'Provider "provider-1" must have a non-negative weight'
       )

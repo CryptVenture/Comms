@@ -1,5 +1,5 @@
 import PushNotifications from 'node-pushnotifications'
-import { ProviderError } from '../../types/errors'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { PushRequest } from '../../models/notification-request'
 
 /**
@@ -43,15 +43,18 @@ export default class PushAdmProvider {
    * @param config.clientId - Client ID from Amazon Developer Console
    * @param config.clientSecret - Client Secret from Amazon Developer Console
    *
-   * @throws {Error} If configuration is invalid
+   * @throws {ConfigurationError} If configuration is invalid
    */
   constructor(config: AdmConfig) {
     if (!config) {
-      throw new Error('ADM provider requires configuration')
+      throw new ConfigurationError('ADM provider requires configuration', 'ADM_CONFIG_MISSING')
     }
 
     if (!config.clientId || !config.clientSecret) {
-      throw new Error('ADM provider requires clientId and clientSecret in configuration')
+      throw new ConfigurationError(
+        'ADM provider requires clientId and clientSecret in configuration',
+        'ADM_CREDENTIALS_MISSING'
+      )
     }
 
     this.transporter = new PushNotifications({

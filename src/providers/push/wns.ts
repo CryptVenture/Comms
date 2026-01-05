@@ -1,5 +1,5 @@
 import PushNotifications from 'node-pushnotifications'
-import { ProviderError } from '../../types/errors'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { PushRequest } from '../../models/notification-request'
 
 /**
@@ -45,19 +45,25 @@ export default class PushWnsProvider {
    * @param config.clientSecret - Client Secret from Microsoft Store Dashboard
    * @param config.notificationMethod - WNS notification method (e.g., 'sendTileSquareBlock', 'sendToastText01')
    *
-   * @throws {Error} If configuration is invalid
+   * @throws {ConfigurationError} If configuration is invalid
    */
   constructor(config: WnsConfig) {
     if (!config) {
-      throw new Error('WNS provider requires configuration')
+      throw new ConfigurationError('WNS provider requires configuration', 'WNS_CONFIG_MISSING')
     }
 
     if (!config.clientId || !config.clientSecret) {
-      throw new Error('WNS provider requires clientId and clientSecret in configuration')
+      throw new ConfigurationError(
+        'WNS provider requires clientId and clientSecret in configuration',
+        'WNS_CREDENTIALS_MISSING'
+      )
     }
 
     if (!config.notificationMethod) {
-      throw new Error('WNS provider requires notificationMethod in configuration')
+      throw new ConfigurationError(
+        'WNS provider requires notificationMethod in configuration',
+        'WNS_METHOD_MISSING'
+      )
     }
 
     this.transporter = new PushNotifications({

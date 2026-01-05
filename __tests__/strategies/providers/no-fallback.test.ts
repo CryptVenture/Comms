@@ -1,6 +1,7 @@
 import { vi, test, expect } from 'vitest'
 import strategyNoFallback from '../../../src/strategies/providers/no-fallback'
 import logger from '../../../src/util/logger'
+import { ConfigurationError } from '../../../src/types/errors'
 
 vi.mock('../../../src/util/logger', () => ({
   default: {
@@ -44,4 +45,25 @@ test('No-Fallback strategy should call first provider and throw error if it fail
   ;(expectedError as Error & { providerId?: string }).providerId = 'sms-provider-1'
   expect(logger.warn).toBeCalledWith('sms-provider-1', expectedError)
   expect(error).toEqual(expectedError)
+})
+
+test('No-Fallback strategy should throw ConfigurationError when no providers are given.', () => {
+  expect(() => strategyNoFallback([])).toThrow(ConfigurationError)
+  expect(() => strategyNoFallback([])).toThrow('No-fallback strategy requires exactly one provider')
+})
+
+test('No-Fallback strategy should throw ConfigurationError when providers array is null/undefined.', () => {
+  expect(() => strategyNoFallback(null as any)).toThrow(ConfigurationError)
+  expect(() => strategyNoFallback(undefined as any)).toThrow(ConfigurationError)
+})
+
+test('No-Fallback strategy should throw ConfigurationError when more than one provider is given.', () => {
+  const providers = [
+    { id: 'sms-provider-1', send: async () => '24' },
+    { id: 'sms-provider-2', send: async () => '25' },
+  ]
+  expect(() => strategyNoFallback(providers as any)).toThrow(ConfigurationError)
+  expect(() => strategyNoFallback(providers as any)).toThrow(
+    'No-fallback strategy requires exactly one provider, but 2 were provided'
+  )
 })

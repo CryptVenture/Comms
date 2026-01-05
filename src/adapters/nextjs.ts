@@ -4,11 +4,14 @@
  */
 
 import type { CommsSdkConfig } from '../types/config'
+import { ConfigurationError } from '../types/errors'
 import { CommsSdk } from '../index'
 
 /**
  * Create WebVentures Comms SDK instance optimized for Next.js
  * Safe for use in Server Components, API Routes, and Server Actions
+ *
+ * @throws {ConfigurationError} If called from client-side (browser) code
  *
  * @example
  * // In Server Component or Server Action
@@ -29,8 +32,9 @@ import { CommsSdk } from '../index'
 export function createNextJSComms(config: CommsSdkConfig): CommsSdk {
   // Verify we're in a server environment
   if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
-    throw new Error(
-      'WebVentures Comms SDK must only be used in server-side Next.js code (Server Components, API Routes, or Server Actions)'
+    throw new ConfigurationError(
+      'WebVentures Comms SDK must only be used in server-side Next.js code (Server Components, API Routes, or Server Actions)',
+      'NEXTJS_SERVER_ONLY'
     )
   }
 
