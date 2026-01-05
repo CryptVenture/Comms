@@ -1,6 +1,6 @@
 # Architecture Documentation
 
-Technical architecture and design patterns of WebVentures Comms SDK v2.0.1.
+Technical architecture and design patterns of WebVentures Comms SDK v2.0.2.
 
 ## Table of Contents
 
@@ -19,7 +19,7 @@ Technical architecture and design patterns of WebVentures Comms SDK v2.0.1.
 
 ## Overview
 
-WebVentures Comms SDK v2.0.1 is architected with the following principles:
+WebVentures Comms SDK v2.0.2 is architected with the following principles:
 
 - **Type Safety**: Full TypeScript implementation with comprehensive types
 - **Modularity**: Clear separation of concerns across components

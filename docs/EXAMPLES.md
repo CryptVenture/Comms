@@ -1,6 +1,6 @@
 # Comprehensive Examples
 
-Complete code examples for WebVentures Comms SDK v2.0.1 covering all features and use cases.
+Complete code examples for WebVentures Comms SDK v2.0.2 covering all features and use cases.
 
 ## Table of Contents
 
@@ -551,7 +551,7 @@ ${deployment.status === 'success' ? '__All systems operational__' : '__Rollback 
 
 await sendDeploymentNotification('123456789', {
   env: 'Production',
-  version: 'v2.0.1',
+  version: 'v2.0.2',
   duration: '3m 24s',
   status: 'success',
   logsUrl: 'https://logs.example.com/deploy-123',
@@ -604,7 +604,7 @@ Read more: ${article.url}
 
 await sendNewsUpdate('123456789', {
   title: 'New SDK Release',
-  summary: 'WebVentures Comms SDK v2.0.1 is now available with Telegram support!',
+  summary: 'WebVentures Comms SDK v2.0.2 is now available with Telegram support!',
   url: 'https://github.com/CryptVenture/Comms',
 })
 ```

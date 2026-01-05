@@ -1,6 +1,6 @@
-# Migration Guide: v1.x to v2.0.1
+# Migration Guide: v1.x to v2.0.2
 
-Complete guide for migrating from WebVentures Comms SDK v1.x to v2.0.1.
+Complete guide for migrating from WebVentures Comms SDK v1.x to v2.0.2.
 
 ## Table of Contents
 
@@ -19,9 +19,9 @@ Complete guide for migrating from WebVentures Comms SDK v1.x to v2.0.1.
 
 ## Overview
 
-WebVentures Comms SDK v2.0.1 is a major rewrite in TypeScript with full type safety, modern framework support, and improved developer experience. While the core concepts remain the same, there are several breaking changes to be aware of.
+WebVentures Comms SDK v2.0.2 is a major rewrite in TypeScript with full type safety, modern framework support, and improved developer experience. While the core concepts remain the same, there are several breaking changes to be aware of.
 
-### Key Improvements in v2.0.1
+### Key Improvements in v2.0.2
 
 - Full TypeScript rewrite with comprehensive type definitions
 - Next.js 16+, React 19, React Native, and Expo support
@@ -44,7 +44,7 @@ WebVentures Comms SDK v2.0.1 is a major rewrite in TypeScript with full type saf
 const CommsSdk = require('webventures-comms')
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```typescript
 // ESM (recommended)
@@ -62,7 +62,7 @@ const CommsSdk = require('@webventures/comms').default
 npm install webventures-comms
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```bash
 npm install @webventures/comms
@@ -70,13 +70,13 @@ npm install @webventures/comms
 
 ### 3. TypeScript is Required
 
-v2.0.1 is written in TypeScript and requires TypeScript 5.0+ for best experience. JavaScript users can still use the package, but will miss out on type checking benefits.
+v2.0.2 is written in TypeScript and requires TypeScript 5.0+ for best experience. JavaScript users can still use the package, but will miss out on type checking benefits.
 
 ### 4. Node.js Version
 
 **v1.x:** Node.js 8+
 
-**v2.0.1:** Node.js 18+
+**v2.0.2:** Node.js 18+
 
 ### 5. Configuration Structure
 
@@ -104,7 +104,7 @@ new CommsSdk({
 })
 ```
 
-**v2.0.1** (same structure, but with TypeScript types):
+**v2.0.2** (same structure, but with TypeScript types):
 
 ```typescript
 import CommsSdk, { type CommsSdkConfig } from '@webventures/comms'
@@ -147,7 +147,7 @@ const comms = new CommsSdk(config)
 }
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```typescript
 import type { EmailRequest } from '@webventures/comms'
@@ -174,7 +174,7 @@ if (result.status === 'error') {
 }
 ```
 
-**v2.0.1** (enhanced with error classes):
+**v2.0.2** (enhanced with error classes):
 
 ```typescript
 import { isProviderError, isCommsError } from '@webventures/comms'
@@ -203,7 +203,7 @@ const customStrategy = (providers) => (request) => {
 }
 ```
 
-**v2.0.1** (typed):
+**v2.0.2** (typed):
 
 ```typescript
 import type { StrategyFunction, Provider, ProviderSendResult } from '@webventures/comms'
@@ -221,7 +221,7 @@ const customStrategy: StrategyFunction = (providers: Provider[]) => {
 
 ### 1. Framework Adapters
 
-v2.0.1 introduces framework-specific adapters:
+v2.0.2 introduces framework-specific adapters:
 
 ```typescript
 // Next.js 16+
@@ -365,7 +365,7 @@ const result = await comms.send(request)
   send: (request) => Promise.resolve('id')
 }
 
-// After (v2.0.1)
+// After (v2.0.2)
 import type { EmailRequest } from '@webventures/comms'
 
 {
@@ -387,7 +387,7 @@ if (result.status === 'error') {
   console.error(result.errors)
 }
 
-// After (v2.0.1) - Enhanced
+// After (v2.0.2) - Enhanced
 import { isProviderError, getErrors } from '@webventures/comms'
 
 const result = await comms.send({...})
@@ -411,7 +411,7 @@ const customStrategy = (providers) => async (request) => {
   return { id, providerId: provider.id }
 }
 
-// After (v2.0.1) - With types
+// After (v2.0.2) - With types
 import type { StrategyFunction } from '@webventures/comms'
 
 const customStrategy: StrategyFunction = (providers) => {
@@ -431,7 +431,7 @@ const customStrategy: StrategyFunction = (providers) => {
 
 ### No Breaking Changes in Provider Configs
 
-All provider configurations from v1.x are compatible with v2.0.1. However, they now have proper TypeScript types.
+All provider configurations from v1.x are compatible with v2.0.2. However, they now have proper TypeScript types.
 
 ### Updated Provider Types
 
@@ -464,7 +464,7 @@ import type {
 
 **v1.x:** No types, only documentation
 
-**v2.0.1:** Full TypeScript types
+**v2.0.2:** Full TypeScript types
 
 ```typescript
 import type {
@@ -634,7 +634,7 @@ comms
   .then(console.log)
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```typescript
 import CommsSdk from '@webventures/comms'
@@ -686,7 +686,7 @@ new CommsSdk({
 })
 ```
 
-**v2.0.1** (identical):
+**v2.0.2** (identical):
 
 ```typescript
 import CommsSdk from '@webventures/comms'
@@ -721,7 +721,7 @@ const customStrategy = (providers) => async (request) => {
 }
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```typescript
 import type { StrategyFunction } from '@webventures/comms'
@@ -759,7 +759,7 @@ const customStrategy: StrategyFunction = (providers) => {
 }
 ```
 
-**v2.0.1:**
+**v2.0.2:**
 
 ```typescript
 import type { EmailRequest } from '@webventures/comms'
@@ -830,13 +830,13 @@ npx tsc --noEmit
 
 **Q: Do I need to change my provider configurations?**
 
-A: No, all v1.x provider configurations work in v2.0.1.
+A: No, all v1.x provider configurations work in v2.0.2.
 
 **Q: Will my custom providers still work?**
 
 A: Yes, but you should add TypeScript types for better type safety.
 
-**Q: Can I use v2.0.1 with JavaScript?**
+**Q: Can I use v2.0.2 with JavaScript?**
 
 A: Yes, but you'll miss out on type checking benefits.
 
@@ -850,7 +850,7 @@ A: No changes - responses are identical to v1.x.
 
 **Q: Are there any performance improvements?**
 
-A: Yes, v2.0.1 has reduced bundle size and optimized dependencies.
+A: Yes, v2.0.2 has reduced bundle size and optimized dependencies.
 
 ---
 

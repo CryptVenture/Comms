@@ -545,11 +545,11 @@ await comms.send({
     attachments: [
       {
         color: 'good',
-        title: 'v2.0.1 Deployment',
+        title: 'v2.0.2 Deployment',
         text: 'All systems operational',
         fields: [
           { title: 'Environment', value: 'Production', short: true },
-          { title: 'Version', value: 'v2.0.1', short: true },
+          { title: 'Version', value: 'v2.0.2', short: true },
           { title: 'Deploy Time', value: '2 minutes', short: true },
           { title: 'Status', value: '✅ Success', short: true },
         ],
@@ -571,7 +571,7 @@ await comms.send({
 <b>🚀 Deployment Complete</b>
 
 <b>Environment:</b> Production
-<b>Version:</b> <code>v2.0.1</code>
+<b>Version:</b> <code>v2.0.2</code>
 <b>Status:</b> ✅ Success
 
 <i>All systems operational</i>

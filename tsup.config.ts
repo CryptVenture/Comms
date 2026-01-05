@@ -34,7 +34,7 @@ export default defineConfig({
   esbuildOptions(options) {
     options.banner = {
       js: `/**
- * @webventures/comms v2.0.1
+ * @webventures/comms v2.0.2
  * WebVentures Comms SDK - Unified Communication SDK
  * (c) 2025 WebVentures
  * @license MIT
