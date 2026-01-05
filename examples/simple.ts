@@ -36,4 +36,30 @@ const notificationRequest: NotificationRequest = {
   },
 }
 
-commsSdk.send(notificationRequest).then(console.log)
+// Basic error handling pattern
+commsSdk
+  .send(notificationRequest)
+  .then((result) => {
+    // Success - notification sent via all configured channels
+    console.log('✓ Notification sent successfully')
+    console.log('Status:', result.status)
+    console.log('Channels:', result.channels)
+
+    // Check if any channels failed
+    if (result.errors) {
+      console.warn('⚠ Some channels failed:', result.errors)
+    }
+  })
+  .catch((error) => {
+    // Error handling - something went wrong
+    console.error('✗ Failed to send notification:', error.message)
+
+    // In production, you might want to:
+    // - Log to error tracking service (Sentry, Rollbar, etc.)
+    // - Retry with exponential backoff
+    // - Fall back to alternative notification channel
+    // - Alert operations team for critical failures
+
+    // Re-throw if you want calling code to handle it
+    // throw error
+  })
