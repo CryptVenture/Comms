@@ -728,6 +728,8 @@ import CommsSdk, {
 
   // Response Types
   NotificationStatus,
+  SuccessNotificationStatus,
+  ErrorNotificationStatus,
   ChannelStatus,
 
   // Error Types
