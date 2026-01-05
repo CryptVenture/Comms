@@ -33,11 +33,27 @@ import { NetworkError } from '../types/errors'
 /**
  * React hook for calling WebVentures Comms backend API
  * This is a helper for client-side React components to call a backend API
+ *
+ * @param baseUrl - The base URL of the backend API
+ * @returns Object containing send function for notifications
+ *
+ * @example
+ * ```typescript
+ * const { send } = useCommsBackend('https://api.example.com')
+ * await send({ email: { to: 'user@example.com', subject: 'Hello' } })
+ * ```
  */
 export function useCommsBackend(baseUrl: string) {
   // Note: In a real implementation, you'd use React hooks here
   // For now, this is a placeholder showing the intended API
 
+  /**
+   * Send a notification through the backend API
+   *
+   * @param notification - The notification payload to send
+   * @returns Promise resolving to the server response
+   * @throws {NetworkError} If the network request fails
+   */
   const send = async (notification: unknown) => {
     const response = await globalThis.fetch(`${baseUrl}/notifications/send`, {
       method: 'POST',
