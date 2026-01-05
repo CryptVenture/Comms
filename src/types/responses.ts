@@ -110,9 +110,10 @@ export function isSuccessResponse(status: NotificationStatus): status is Success
 }
 
 /**
- * Type guard for error response
+ * Type guard for error response.
+ * Returns a type predicate that narrows NotificationStatus to ErrorNotificationStatus.
  */
-export function isErrorResponse(status: NotificationStatus): boolean {
+export function isErrorResponse(status: NotificationStatus): status is ErrorNotificationStatus {
   return status.status === 'error'
 }
 
