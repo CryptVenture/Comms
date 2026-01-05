@@ -17,13 +17,25 @@ export class AWSCredentialsError extends Error {
 }
 
 /**
- * Cache for derived signing keys
- * Key format: <credsIdentifier>_<date>_<region>_<service>
- * Value: signing key Buffer
+ * Cache entry containing signing key and timestamp
  *
  * @private
  */
-let cachedSecret: Record<string, Buffer> = {}
+interface CacheEntry {
+  /** The derived signing key */
+  key: Buffer
+  /** Timestamp when the key was cached (milliseconds since epoch) */
+  timestamp: number
+}
+
+/**
+ * Cache for derived signing keys
+ * Key format: <credsIdentifier>_<date>_<region>_<service>
+ * Value: CacheEntry with signing key and timestamp
+ *
+ * @private
+ */
+let cachedSecret: Record<string, CacheEntry> = {}
 
 /**
  * Queue of cache keys in insertion order
@@ -42,6 +54,15 @@ let cacheQueue: string[] = []
 const MAX_CACHE_ENTRIES = 50
 
 /**
+ * Time-to-live for cached signing keys in milliseconds
+ * AWS recommends regenerating signing keys daily as they include the date in derivation
+ * Setting to 24 hours ensures keys are refreshed daily for security
+ *
+ * @private
+ */
+const CACHE_TTL_MS = 24 * 60 * 60 * 1000 // 24 hours
+
+/**
  * AWS Signature Version 4 identifier
  *
  * @private
@@ -54,11 +75,19 @@ const V4_IDENTIFIER = 'aws4_request'
  * Provides utility functions for managing AWS credentials and signing keys:
  * - Creates credential scope strings
  * - Derives signing keys from credentials
- * - Caches derived keys for performance
+ * - Caches derived keys for performance with time-based expiration
  *
  * The signing key derivation is an expensive operation involving multiple
  * HMAC calculations, so caching provides significant performance benefits
  * when making multiple requests to the same service/region on the same day.
+ *
+ * **Security: Time-Based Key Expiration**
+ *
+ * Cached signing keys expire after 24 hours, following AWS best practices.
+ * This ensures that:
+ * - Keys are regenerated daily as recommended by AWS
+ * - Rotated or compromised credentials don't persist in memory indefinitely
+ * - Sensitive cryptographic material has bounded lifetime
  *
  * @see https://docs.aws.amazon.com/general/latest/gr/signature-v4-examples.html
  */
@@ -120,7 +149,14 @@ class V4Credentials {
    * 4. kSigning = HMAC(kService, "aws4_request")
    *
    * Keys are cached to avoid expensive re-computation. The cache is keyed by
-   * credentials, date, region, and service, and uses LRU eviction.
+   * credentials, date, region, and service.
+   *
+   * **Cache Eviction:**
+   * - Time-based: Keys expire after 24 hours (AWS best practice)
+   * - LRU-based: Oldest keys evicted when cache exceeds 50 entries
+   *
+   * Expired keys are automatically removed when accessed, ensuring sensitive
+   * cryptographic material doesn't persist indefinitely in memory.
    *
    * @param credentials - AWS credentials
    * @param date - Date string in YYYYMMDD format
@@ -186,9 +222,26 @@ class V4Credentials {
 
       // Check cache if caching is enabled
       if (shouldCache && cacheKey in cachedSecret) {
-        const cachedKey = cachedSecret[cacheKey]
-        if (cachedKey) {
-          return cachedKey
+        const cachedEntry = cachedSecret[cacheKey]
+        if (cachedEntry) {
+          // Check if cached entry has expired
+          const now = Date.now()
+          const age = now - cachedEntry.timestamp
+
+          if (age < CACHE_TTL_MS) {
+            // Cache hit - return cached key
+            return cachedEntry.key
+          } else {
+            // Cache expired - remove from cache and derive new key
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete cachedSecret[cacheKey]
+
+            // Remove from queue
+            const queueIndex = cacheQueue.indexOf(cacheKey)
+            if (queueIndex !== -1) {
+              cacheQueue.splice(queueIndex, 1)
+            }
+          }
         }
       }
 
@@ -201,9 +254,12 @@ class V4Credentials {
 
       const signingKey = hmac(kService, V4_IDENTIFIER, 'buffer') as Buffer
 
-      // Cache the signing key if caching is enabled
+      // Cache the signing key with timestamp if caching is enabled
       if (shouldCache) {
-        cachedSecret[cacheKey] = signingKey
+        cachedSecret[cacheKey] = {
+          key: signingKey,
+          timestamp: Date.now(),
+        }
         cacheQueue.push(cacheKey)
 
         // Implement LRU eviction: remove oldest entry if cache is full
@@ -229,14 +285,65 @@ class V4Credentials {
   }
 
   /**
+   * Remove all expired entries from the cache
+   *
+   * This proactively cleans up signing keys that have exceeded their 24-hour TTL.
+   * Normally, expired keys are removed lazily when accessed, but this method
+   * allows for immediate cleanup of sensitive cryptographic material.
+   *
+   * @returns Number of expired entries removed
+   *
+   * @example
+   * ```typescript
+   * // Periodically clean up expired keys
+   * setInterval(() => {
+   *   const removed = v4Credentials.cleanExpiredEntries()
+   *   if (removed > 0) {
+   *     console.log(`Cleaned up ${removed} expired signing keys`)
+   *   }
+   * }, 60 * 60 * 1000) // Every hour
+   * ```
+   */
+  cleanExpiredEntries(): number {
+    const now = Date.now()
+    let removedCount = 0
+
+    // Iterate through all cached entries
+    for (const cacheKey of [...cacheQueue]) {
+      const entry = cachedSecret[cacheKey]
+      if (entry) {
+        const age = now - entry.timestamp
+
+        if (age >= CACHE_TTL_MS) {
+          // Entry has expired - remove it
+          // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+          delete cachedSecret[cacheKey]
+
+          // Remove from queue
+          const queueIndex = cacheQueue.indexOf(cacheKey)
+          if (queueIndex !== -1) {
+            cacheQueue.splice(queueIndex, 1)
+          }
+
+          removedCount++
+        }
+      }
+    }
+
+    return removedCount
+  }
+
+  /**
    * Empty the signing key cache
    *
+   * Immediately clears all cached signing keys from memory, regardless of age.
    * This is useful for:
    * - Testing (ensuring clean state between tests)
-   * - Security (clearing sensitive key material from memory)
+   * - Security (clearing sensitive key material from memory immediately)
+   * - Credential rotation (forcing re-derivation with new credentials)
    * - Debugging (forcing key re-derivation)
    *
-   * Note: This function is primarily for testing purposes
+   * Note: Unlike `cleanExpiredEntries()`, this clears ALL keys, not just expired ones
    *
    * @example
    * ```typescript
@@ -245,7 +352,7 @@ class V4Credentials {
    *   v4Credentials.emptyCache()
    * })
    *
-   * // Or when rotating credentials
+   * // When rotating credentials
    * v4Credentials.emptyCache()
    * ```
    */
