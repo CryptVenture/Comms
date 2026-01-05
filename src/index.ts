@@ -36,7 +36,13 @@ export type { WebpushProvider } from './models/provider-webpush'
 export type { SlackProvider } from './models/provider-slack'
 export type { WhatsappProvider } from './models/provider-whatsapp'
 
-export type { NotificationStatus, ChannelStatus, NotificationStatusType } from './types/responses'
+export type {
+  NotificationStatus,
+  SuccessNotificationStatus,
+  ErrorNotificationStatus,
+  ChannelStatus,
+  NotificationStatusType,
+} from './types/responses'
 
 export type {
   ChannelType,

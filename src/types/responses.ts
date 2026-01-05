@@ -45,6 +45,48 @@ export interface NotificationStatus {
 }
 
 /**
+ * Discriminated type for successful notification responses.
+ * Narrows NotificationStatus to indicate a successful result with the channels field always present.
+ */
+export interface SuccessNotificationStatus {
+  /**
+   * Status is always 'success' for successful responses
+   */
+  status: 'success'
+
+  /**
+   * Results for successfully sent channels (always present on success)
+   */
+  channels: Partial<Record<ChannelType, ChannelStatus>>
+
+  /**
+   * Errors are not present on successful responses
+   */
+  errors?: undefined
+}
+
+/**
+ * Discriminated type for error notification responses.
+ * Narrows NotificationStatus to indicate a failed result with the errors field always present.
+ */
+export interface ErrorNotificationStatus {
+  /**
+   * Status is always 'error' for error responses
+   */
+  status: 'error'
+
+  /**
+   * Channels are not present on error responses
+   */
+  channels?: undefined
+
+  /**
+   * Errors for failed channels (always present on error)
+   */
+  errors: Partial<Record<ChannelType, Error>>
+}
+
+/**
  * Provider send result
  */
 export interface ProviderSendResult {
@@ -60,16 +102,18 @@ export interface ProviderSendResult {
 }
 
 /**
- * Type guard for successful response
+ * Type guard for successful response.
+ * Returns a type predicate that narrows NotificationStatus to SuccessNotificationStatus.
  */
-export function isSuccessResponse(status: NotificationStatus): boolean {
+export function isSuccessResponse(status: NotificationStatus): status is SuccessNotificationStatus {
   return status.status === 'success'
 }
 
 /**
- * Type guard for error response
+ * Type guard for error response.
+ * Returns a type predicate that narrows NotificationStatus to ErrorNotificationStatus.
  */
-export function isErrorResponse(status: NotificationStatus): boolean {
+export function isErrorResponse(status: NotificationStatus): status is ErrorNotificationStatus {
   return status.status === 'error'
 }
 

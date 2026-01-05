@@ -754,6 +754,46 @@ interface NotificationStatus {
 | `channels` | object               | Results for successfully sent channels             |
 | `errors`   | object               | Errors for failed channels                         |
 
+### SuccessNotificationStatus
+
+Discriminated type for successful notification responses. Narrows `NotificationStatus` to indicate a successful result with the `channels` field always present.
+
+```typescript
+interface SuccessNotificationStatus {
+  status: 'success'
+  channels: Partial<Record<ChannelType, ChannelStatus>>
+  errors?: undefined
+}
+```
+
+**Properties:**
+
+| Property   | Type                                         | Description                                    |
+| ---------- | -------------------------------------------- | ---------------------------------------------- |
+| `status`   | 'success'                                    | Literal 'success' for successful responses     |
+| `channels` | Partial<Record<ChannelType, ChannelStatus>>  | Results for successfully sent channels (always present) |
+| `errors`   | undefined                                    | Not present on successful responses            |
+
+### ErrorNotificationStatus
+
+Discriminated type for error notification responses. Narrows `NotificationStatus` to indicate a failed result with the `errors` field always present.
+
+```typescript
+interface ErrorNotificationStatus {
+  status: 'error'
+  channels?: undefined
+  errors: Partial<Record<ChannelType, Error>>
+}
+```
+
+**Properties:**
+
+| Property   | Type                                | Description                              |
+| ---------- | ----------------------------------- | ---------------------------------------- |
+| `status`   | 'error'                             | Literal 'error' for error responses      |
+| `channels` | undefined                           | Not present on error responses           |
+| `errors`   | Partial<Record<ChannelType, Error>> | Errors for failed channels (always present) |
+
 ### ChannelStatus
 
 Status for a single channel.
@@ -1022,34 +1062,103 @@ class NetworkError extends CommsError {
 #### isSuccessResponse()
 
 ```typescript
-function isSuccessResponse(status: NotificationStatus): boolean
+function isSuccessResponse(status: NotificationStatus): status is SuccessNotificationStatus
 ```
 
-Type guard to check if response is successful.
+Type guard to check if response is successful. Returns a type predicate that narrows `NotificationStatus` to `SuccessNotificationStatus`, enabling TypeScript to infer that `channels` is always present within the conditional block.
 
 **Example:**
 
 ```typescript
-const result = await comms.send({...})
+import { isSuccessResponse } from '@webventures/comms'
+
+const result = await comms.send({
+  email: {
+    from: 'noreply@example.com',
+    to: 'user@example.com',
+    subject: 'Welcome',
+    text: 'Welcome to our platform!',
+  },
+})
+
 if (isSuccessResponse(result)) {
+  // TypeScript knows result is SuccessNotificationStatus
+  // result.channels is guaranteed to be present (not optional)
   console.log('All channels succeeded')
+  console.log('Email ID:', result.channels.email?.id)
+
+  // No need to check if channels exists - TypeScript knows it's defined
+  for (const [channel, status] of Object.entries(result.channels)) {
+    console.log(`${channel}: ${status?.id}`)
+  }
+}
+```
+
+**Type Narrowing Benefit:**
+
+```typescript
+// Before (without type predicate) - TypeScript doesn't narrow the type
+if (result.status === 'success') {
+  // result.channels is still optional: Partial<Record<...>> | undefined
+  console.log(result.channels?.email?.id) // Must use optional chaining
+}
+
+// After (with type predicate) - TypeScript narrows to SuccessNotificationStatus
+if (isSuccessResponse(result)) {
+  // result.channels is guaranteed: Partial<Record<...>>
+  console.log(result.channels.email?.id) // No optional chaining needed for channels
 }
 ```
 
 #### isErrorResponse()
 
 ```typescript
-function isErrorResponse(status: NotificationStatus): boolean
+function isErrorResponse(status: NotificationStatus): status is ErrorNotificationStatus
 ```
 
-Type guard to check if response has errors.
+Type guard to check if response has errors. Returns a type predicate that narrows `NotificationStatus` to `ErrorNotificationStatus`, enabling TypeScript to infer that `errors` is always present within the conditional block.
 
 **Example:**
 
 ```typescript
-const result = await comms.send({...})
+import { isErrorResponse, getErrors } from '@webventures/comms'
+
+const result = await comms.send({
+  email: {
+    from: 'noreply@example.com',
+    to: 'user@example.com',
+    subject: 'Welcome',
+    text: 'Welcome to our platform!',
+  },
+})
+
 if (isErrorResponse(result)) {
+  // TypeScript knows result is ErrorNotificationStatus
+  // result.errors is guaranteed to be present (not optional)
   console.error('Some channels failed')
+
+  // No need to check if errors exists - TypeScript knows it's defined
+  for (const [channel, error] of Object.entries(result.errors)) {
+    console.error(`${channel} failed: ${error?.message}`)
+  }
+}
+```
+
+**Type Narrowing Benefit:**
+
+```typescript
+// Before (without type predicate) - TypeScript doesn't narrow the type
+if (result.status === 'error') {
+  // result.errors is still optional: Partial<Record<...>> | undefined
+  if (result.errors) { // Must check explicitly
+    console.error(result.errors.email?.message)
+  }
+}
+
+// After (with type predicate) - TypeScript narrows to ErrorNotificationStatus
+if (isErrorResponse(result)) {
+  // result.errors is guaranteed: Partial<Record<...>>
+  console.error(result.errors.email?.message) // No need to check if errors exists
 }
 ```
 

@@ -578,18 +578,28 @@ const result = await comms.send({
 
 ### Helper Functions
 
+The SDK provides type guard functions that return TypeScript type predicates, enabling proper type narrowing within conditional blocks.
+
 ```typescript
 import { isSuccessResponse, isErrorResponse, getErrors, getChannelIds } from '@webventures/comms'
 
 const result = await comms.send({...})
 
-// Type guards
+// Type guards with type narrowing
 if (isSuccessResponse(result)) {
+  // TypeScript knows result is SuccessNotificationStatus
+  // result.channels is guaranteed to be present
   console.log('Success!')
+  console.log('Email ID:', result.channels.email?.id)
 }
 
 if (isErrorResponse(result)) {
+  // TypeScript knows result is ErrorNotificationStatus
+  // result.errors is guaranteed to be present
   console.error('Failed!')
+  for (const [channel, error] of Object.entries(result.errors)) {
+    console.error(`${channel}: ${error?.message}`)
+  }
 }
 
 // Extract errors
@@ -597,6 +607,24 @@ const errors = getErrors(result) // Error[]
 
 // Extract channel IDs
 const ids = getChannelIds(result) // { email?: string, sms?: string, ... }
+```
+
+**Type Narrowing Benefit:**
+
+Without type predicates, you'd need to manually check if properties exist:
+
+```typescript
+// Without type predicates
+if (result.status === 'success') {
+  // result.channels is still optional
+  console.log(result.channels?.email?.id) // Must use optional chaining
+}
+
+// With type predicates
+if (isSuccessResponse(result)) {
+  // result.channels is guaranteed
+  console.log(result.channels.email?.id) // No optional chaining needed for channels
+}
 ```
 
 ## Error Handling
@@ -738,7 +766,13 @@ import type {
 } from '@webventures/comms'
 
 // Response types
-import type { NotificationStatus, ChannelStatus, NotificationStatusType } from '@webventures/comms'
+import type {
+  NotificationStatus,
+  SuccessNotificationStatus,
+  ErrorNotificationStatus,
+  ChannelStatus,
+  NotificationStatusType,
+} from '@webventures/comms'
 
 // Provider types
 import type {
