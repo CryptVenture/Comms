@@ -119,9 +119,23 @@ Infobip WhatsApp Business API
 </td>
 <td width="25%" align="center">
 
+### 📱 Telegram
+
+Telegram Bot API with rich formatting
+
+</td>
+</tr>
+<tr>
+<td width="25%" align="center">
+
 ### 🎯 Custom
 
 Build your own providers
+
+</td>
+<td width="25%" colspan="3" align="center">
+
+_More channels coming soon_
 
 </td>
 </tr>
@@ -142,7 +156,8 @@ Build your own providers
 | **Fallback**    | Automatic failover to backup providers | High availability, 99.9% uptime  |
 | **Round-robin** | Load balancing across providers        | Cost optimization, rate limiting |
 | **No-fallback** | Single provider with immediate errors  | Testing, debugging               |
-| **Custom**      | Define your own selection logic        | Geographic routing, A/B testing  |
+| **Weighted**    | Probability-based provider selection   | Gradual rollouts, A/B testing    |
+| **Custom**      | Define your own selection logic        | Geographic routing, custom logic |
 
 ---
 
@@ -546,6 +561,28 @@ await comms.send({
 })
 ```
 
+### Telegram Notifications
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '-1001234567890',
+    text: `
+<b>🚀 Deployment Complete</b>
+
+<b>Environment:</b> Production
+<b>Version:</b> <code>v2.0.1</code>
+<b>Status:</b> ✅ Success
+
+<i>All systems operational</i>
+
+<a href="https://status.example.com">View Status</a>
+    `.trim(),
+    parseMode: 'HTML',
+  },
+})
+```
+
 ### Custom Strategy (Geographic Routing)
 
 ```typescript
@@ -725,6 +762,7 @@ import CommsSdk, {
   WebpushRequest,
   SlackRequest,
   WhatsappRequest,
+  TelegramRequest,
 
   // Response Types
   NotificationStatus,
@@ -847,6 +885,7 @@ const result: NotificationStatus = await comms.send(request)
 - **Webpush**: Web Push with VAPID
 - **Slack**: Webhook with rich formatting
 - **WhatsApp**: Infobip Business API
+- **Telegram**: Telegram Bot API with HTML/Markdown formatting
 
 [See provider configuration guide →](./docs/PROVIDERS.md)
 
@@ -991,12 +1030,12 @@ pnpm test:ui
 
 ## 📊 Stats
 
-- **138 Tests** - 100% passing
+- **556 Tests** - 100% passing
 - **40+ Providers** - Production-ready integrations
-- **7 Channels** - Email, SMS, Push, Voice, Webpush, Slack, WhatsApp
-- **Zero Dependencies** (runtime) - Minimal footprint
+- **8 Channels** - Email, SMS, Push, Voice, Webpush, Slack, WhatsApp, Telegram
 - **TypeScript 100%** - Full type safety
 - **Node.js 18+** - Modern JavaScript features
+- **Production Ready** - Battle-tested error handling
 
 ---
 

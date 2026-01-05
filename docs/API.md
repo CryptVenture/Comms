@@ -293,6 +293,7 @@ type NotificationRequest = {
   webpush?: WebpushRequest
   slack?: SlackRequest
   whatsapp?: WhatsappRequest
+  telegram?: TelegramRequest
 }
 ```
 
@@ -730,6 +731,74 @@ const whatsappRequest: WhatsappRequest = {
 }
 ```
 
+### TelegramRequest
+
+Telegram message request.
+
+```typescript
+interface TelegramRequest extends RequestMetadata {
+  chatId: string | number
+  text: string
+  parseMode?: 'HTML' | 'Markdown' | 'MarkdownV2'
+  disableWebPagePreview?: boolean
+  disableNotification?: boolean
+  customize?: (providerId: string, request: TelegramRequest) => Promise<TelegramRequest>
+}
+```
+
+**Required Properties:**
+
+| Property | Type             | Description                                |
+| -------- | ---------------- | ------------------------------------------ |
+| `chatId` | string \| number | Chat, group, or channel identifier         |
+| `text`   | string           | Message text (1-4096 characters)           |
+
+**Optional Properties:**
+
+| Property                 | Type                                     | Default | Description                                        |
+| ------------------------ | ---------------------------------------- | ------- | -------------------------------------------------- |
+| `parseMode`              | 'HTML' \| 'Markdown' \| 'MarkdownV2'     | -       | Text formatting mode                               |
+| `disableWebPagePreview`  | boolean                                  | false   | Disable link previews in the message               |
+| `disableNotification`    | boolean                                  | false   | Send message silently (no notification sound)      |
+| `customize`              | function                                 | -       | Function to customize request per provider         |
+
+**Example:**
+
+```typescript
+const telegramRequest: TelegramRequest = {
+  chatId: '-1001234567890',
+  text: '<b>Hello from Telegram!</b>\n\nThis is a <i>formatted</i> message.',
+  parseMode: 'HTML',
+  disableNotification: false,
+  id: 'msg-123',
+  userId: 'user-456',
+}
+```
+
+**Parse Mode Examples:**
+
+```typescript
+// HTML formatting
+{
+  chatId: '123456',
+  text: '<b>Bold</b> <i>Italic</i> <code>Code</code> <a href="https://example.com">Link</a>',
+  parseMode: 'HTML'
+}
+
+// MarkdownV2 formatting
+{
+  chatId: '123456',
+  text: '*Bold* _Italic_ `Code` [Link](https://example.com)',
+  parseMode: 'MarkdownV2'
+}
+
+// Plain text (no formatting)
+{
+  chatId: '123456',
+  text: 'Plain text message without any formatting'
+}
+```
+
 ---
 
 ## Response Types
@@ -883,6 +952,7 @@ type PushProvider =
 - **Webpush**: `WebpushProvider` (GCM)
 - **Slack**: `SlackProvider` (Webhook)
 - **WhatsApp**: `WhatsappProvider` (Infobip)
+- **Telegram**: `TelegramProvider` (Telegram Bot API)
 
 See [PROVIDERS.md](./PROVIDERS.md) for complete provider documentation.
 
@@ -934,8 +1004,17 @@ const customStrategy: StrategyFunction = (providers) => {
 Predefined strategy names.
 
 ```typescript
-type MultiProviderStrategyType = 'fallback' | 'roundrobin' | 'no-fallback'
+type MultiProviderStrategyType = 'fallback' | 'roundrobin' | 'no-fallback' | 'weighted'
 ```
+
+**Available Strategies:**
+
+| Strategy       | Description                                                     |
+| -------------- | --------------------------------------------------------------- |
+| `fallback`     | Try providers in sequence until one succeeds                    |
+| `roundrobin`   | Distribute requests evenly across providers in rotation         |
+| `no-fallback`  | Use first provider only, fail immediately on error              |
+| `weighted`     | Select providers based on probability weights (see custom strategies) |
 
 ---
 
@@ -1272,7 +1351,7 @@ console.log(CHANNELS.sms) // 'sms'
 Union type of all channel names.
 
 ```typescript
-type ChannelType = 'email' | 'sms' | 'push' | 'voice' | 'webpush' | 'slack' | 'whatsapp'
+type ChannelType = 'email' | 'sms' | 'push' | 'voice' | 'webpush' | 'slack' | 'whatsapp' | 'telegram'
 ```
 
 ### NotificationStatusType

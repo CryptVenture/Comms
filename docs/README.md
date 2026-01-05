@@ -27,7 +27,7 @@ WebVentures Comms SDK is a powerful, type-safe notification library that provide
 
 ### Why WebVentures Comms SDK?
 
-- **Unified API**: Single interface for all notification channels (email, SMS, push, voice, webpush, Slack, WhatsApp)
+- **Unified API**: Single interface for all notification channels (email, SMS, push, voice, webpush, Slack, WhatsApp, Telegram)
 - **Multi-Provider Support**: Built-in fallback and round-robin strategies for high availability
 - **Framework-First**: Optimized adapters for Next.js, React Native, Expo, and more
 - **Type-Safe**: Full TypeScript support with comprehensive type definitions
@@ -45,12 +45,14 @@ WebVentures Comms SDK is a powerful, type-safe notification library that provide
 - **Webpush**: Browser push notifications (GCM)
 - **Slack**: Webhook-based messaging
 - **WhatsApp**: Infobip integration
+- **Telegram**: Telegram Bot API with HTML/Markdown formatting
 
 ### Multi-Provider Strategies
 
 - **Fallback**: Automatic failover to backup providers
 - **Round-robin**: Load balancing across providers
 - **No-fallback**: Single provider with no failover
+- **Weighted**: Probability-based provider selection for gradual rollouts
 - **Custom**: Define your own provider selection logic
 
 ### Framework Support

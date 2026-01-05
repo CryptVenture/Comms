@@ -12,6 +12,7 @@
     "webpush",
     "slack",
     "whatsapp",
+    "telegram",
     "voice",
     "transactional",
     "communications",
@@ -140,6 +141,17 @@
         "default": "./dist/providers/whatsapp.js"
       },
       "default": "./dist/providers/whatsapp.mjs"
+    },
+    "./providers/telegram": {
+      "import": {
+        "types": "./dist/providers/telegram.d.mts",
+        "default": "./dist/providers/telegram.mjs"
+      },
+      "require": {
+        "types": "./dist/providers/telegram.d.ts",
+        "default": "./dist/providers/telegram.js"
+      },
+      "default": "./dist/providers/telegram.mjs"
     },
     "./strategies/fallback": {
       "import": {

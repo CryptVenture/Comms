@@ -11,6 +11,7 @@ Complete guide for configuring all notification providers in WebVentures Comms S
 - [Webpush Providers](#webpush-providers)
 - [Slack Providers](#slack-providers)
 - [WhatsApp Providers](#whatsapp-providers)
+- [Telegram Providers](#telegram-providers)
 - [Custom Providers](#custom-providers)
 - [Logger Provider](#logger-provider)
 
@@ -836,6 +837,165 @@ await comms.send({
   },
 })
 ```
+
+---
+
+## Telegram Providers
+
+Send messages to Telegram chats, groups, and channels via Telegram Bot API.
+
+### Telegram
+
+Official Telegram Bot API integration.
+
+```typescript
+{
+  type: 'telegram',
+  botToken: 'your-telegram-bot-token'
+}
+```
+
+**Configuration:**
+
+| Property   | Type   | Required | Description                                           |
+| ---------- | ------ | -------- | ----------------------------------------------------- |
+| `type`     | string | Yes      | Must be `'telegram'`                                  |
+| `botToken` | string | Yes      | Telegram Bot API token from @BotFather                |
+
+**Setup:**
+
+1. Create a Telegram bot via [@BotFather](https://t.me/botfather)
+2. Send `/newbot` command and follow the prompts
+3. Copy the bot token provided by BotFather
+4. Add bot to your chat/group/channel
+5. Get chat ID using bot methods or [@userinfobot](https://t.me/userinfobot)
+
+**Example Configuration:**
+
+```typescript
+const comms = new CommsSdk({
+  channels: {
+    telegram: {
+      providers: [
+        {
+          type: 'telegram',
+          botToken: process.env.TELEGRAM_BOT_TOKEN,
+        },
+      ],
+    },
+  },
+})
+```
+
+**Example - Simple Message:**
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '123456789',
+    text: 'Hello from WebVentures Comms SDK!',
+  },
+})
+```
+
+**Example - Formatted Message with HTML:**
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '-1001234567890',
+    text: `
+<b>System Alert</b>
+
+Status: <i>All systems operational</i>
+Uptime: <code>99.9%</code>
+
+<a href="https://status.example.com">View Status Page</a>
+    `.trim(),
+    parseMode: 'HTML',
+  },
+})
+```
+
+**Example - Formatted Message with MarkdownV2:**
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '123456789',
+    text: `
+*Deployment Complete*
+
+Environment: _Production_
+Version: \`v2\\.0\\.1\`
+Status: ✅ Success
+
+[View Logs](https://logs\\.example\\.com)
+    `.trim(),
+    parseMode: 'MarkdownV2',
+  },
+})
+```
+
+**Example - Silent Notification:**
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '123456789',
+    text: 'Background task completed successfully',
+    disableNotification: true, // Send silently without notification sound
+  },
+})
+```
+
+**Example - Message Without Link Preview:**
+
+```typescript
+await comms.send({
+  telegram: {
+    chatId: '123456789',
+    text: 'Check out this article: https://example.com/article',
+    disableWebPagePreview: true, // Don't show link preview
+  },
+})
+```
+
+**Getting Chat IDs:**
+
+- **Private Chat**: Start a conversation with your bot, then use the `getUpdates` API method
+- **Group Chat**: Add bot to group, send a message, then call `getUpdates` to get the group ID (negative number)
+- **Channel**: Add bot as admin to channel, post a message, call `getUpdates` to get channel ID (starts with `-100`)
+- **Quick Method**: Use [@userinfobot](https://t.me/userinfobot) to get your user ID
+
+**HTML Formatting Tags:**
+
+- `<b>bold</b>` - Bold text
+- `<i>italic</i>` - Italic text
+- `<u>underline</u>` - Underlined text
+- `<s>strikethrough</s>` - Strikethrough text
+- `<code>code</code>` - Inline code
+- `<pre>code block</pre>` - Code block
+- `<a href="url">link</a>` - Hyperlink
+
+**MarkdownV2 Formatting:**
+
+- `*bold*` - Bold text
+- `_italic_` - Italic text
+- `__underline__` - Underlined text
+- `~strikethrough~` - Strikethrough text
+- `` `code` `` - Inline code
+- ` ```code block``` ` - Code block
+- `[link](url)` - Hyperlink
+
+**Note**: MarkdownV2 requires escaping of special characters: `_`, `*`, `[`, `]`, `(`, `)`, `~`, `` ` ``, `>`, `#`, `+`, `-`, `=`, `|`, `{`, `}`, `.`, `!`
+
+**Links:**
+
+- [Telegram Bot API Documentation](https://core.telegram.org/bots/api)
+- [Bot API Methods](https://core.telegram.org/bots/api#available-methods)
+- [Formatting Options](https://core.telegram.org/bots/api#formatting-options)
+- [BotFather Guide](https://core.telegram.org/bots/features#botfather)
 
 ---
 

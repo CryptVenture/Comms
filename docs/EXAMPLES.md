@@ -8,6 +8,7 @@ Complete code examples for WebVentures Comms SDK v2.0.1 covering all features an
 - [Email Examples](#email-examples)
 - [SMS Examples](#sms-examples)
 - [Push Notification Examples](#push-notification-examples)
+- [Telegram Examples](#telegram-examples)
 - [Multi-Channel Examples](#multi-channel-examples)
 - [Provider Strategy Examples](#provider-strategy-examples)
 - [Error Handling Examples](#error-handling-examples)
@@ -455,6 +456,307 @@ async function sendSilentPush(deviceToken: string, updateData: any) {
 
 ---
 
+## Telegram Examples
+
+### Simple Telegram Message
+
+```typescript
+const comms = new CommsSdk({
+  channels: {
+    telegram: {
+      providers: [
+        {
+          type: 'telegram',
+          botToken: process.env.TELEGRAM_BOT_TOKEN,
+        },
+      ],
+    },
+  },
+})
+
+async function sendTelegramMessage(chatId: string, message: string) {
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: message,
+    },
+  })
+
+  return result.channels?.telegram?.id
+}
+
+await sendTelegramMessage('123456789', 'Hello from WebVentures Comms SDK!')
+```
+
+### HTML Formatted Message
+
+```typescript
+async function sendFormattedAlert(chatId: string, alert: Alert) {
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: `
+<b>🚨 System Alert</b>
+
+<b>Type:</b> ${alert.type}
+<b>Severity:</b> <code>${alert.severity}</code>
+<b>Status:</b> <i>${alert.status}</i>
+
+<b>Details:</b>
+${alert.details}
+
+<a href="${alert.url}">View Full Report</a>
+      `.trim(),
+      parseMode: 'HTML',
+    },
+  })
+
+  return result
+}
+
+await sendFormattedAlert('-1001234567890', {
+  type: 'Security',
+  severity: 'HIGH',
+  status: 'Active',
+  details: 'Multiple failed login attempts detected',
+  url: 'https://security.example.com/alert/123',
+})
+```
+
+### MarkdownV2 Formatted Message
+
+```typescript
+async function sendDeploymentNotification(chatId: string, deployment: Deployment) {
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: `
+*🚀 Deployment Complete*
+
+*Environment:* _${deployment.env}_
+*Version:* \`${deployment.version.replace('.', '\\.')}\`
+*Duration:* ${deployment.duration}
+*Status:* ${deployment.status === 'success' ? '✅ Success' : '❌ Failed'}
+
+${deployment.status === 'success' ? '__All systems operational__' : '__Rollback initiated__'}
+
+[View Deployment Logs](${deployment.logsUrl.replace('.', '\\.').replace('-', '\\-')})
+      `.trim(),
+      parseMode: 'MarkdownV2',
+    },
+  })
+
+  return result
+}
+
+await sendDeploymentNotification('123456789', {
+  env: 'Production',
+  version: 'v2.0.1',
+  duration: '3m 24s',
+  status: 'success',
+  logsUrl: 'https://logs.example.com/deploy-123',
+})
+```
+
+### Silent Notification
+
+```typescript
+async function sendBackgroundNotification(chatId: string, message: string) {
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: message,
+      disableNotification: true, // Send silently without sound
+    },
+  })
+
+  console.log('Silent notification sent:', result.channels?.telegram?.id)
+  return result
+}
+
+// Send notifications without disturbing users
+await sendBackgroundNotification('123456789', 'Background sync completed successfully')
+```
+
+### Message Without Link Preview
+
+```typescript
+async function sendNewsUpdate(chatId: string, article: Article) {
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: `
+📰 <b>Latest News</b>
+
+<b>${article.title}</b>
+
+${article.summary}
+
+Read more: ${article.url}
+      `.trim(),
+      parseMode: 'HTML',
+      disableWebPagePreview: true, // Don't show bulky link preview
+    },
+  })
+
+  return result
+}
+
+await sendNewsUpdate('123456789', {
+  title: 'New SDK Release',
+  summary: 'WebVentures Comms SDK v2.0.1 is now available with Telegram support!',
+  url: 'https://github.com/CryptVenture/Comms',
+})
+```
+
+### Bot Notifications to Groups and Channels
+
+```typescript
+interface NotificationTarget {
+  type: 'private' | 'group' | 'channel'
+  chatId: string
+  name: string
+}
+
+const targets: NotificationTarget[] = [
+  { type: 'private', chatId: '123456789', name: 'John Doe' },
+  { type: 'group', chatId: '-987654321', name: 'Engineering Team' },
+  { type: 'channel', chatId: '-1001234567890', name: 'Status Updates' },
+]
+
+async function broadcastNotification(message: string, targets: NotificationTarget[]) {
+  const promises = targets.map((target) =>
+    comms.send({
+      telegram: {
+        chatId: target.chatId,
+        text: `
+<b>📢 Broadcast Message</b>
+
+${message}
+
+<i>Sent to ${target.type}: ${target.name}</i>
+        `.trim(),
+        parseMode: 'HTML',
+        // Silent for channels, normal for private/group
+        disableNotification: target.type === 'channel',
+      },
+    })
+  )
+
+  const results = await Promise.allSettled(promises)
+
+  const succeeded = results.filter((r) => r.status === 'fulfilled').length
+  const failed = results.filter((r) => r.status === 'rejected').length
+
+  console.log(`Broadcast complete: ${succeeded} succeeded, ${failed} failed`)
+
+  return { succeeded, failed, results }
+}
+
+await broadcastNotification('System maintenance scheduled for tonight at 2 AM UTC', targets)
+```
+
+### Error Monitoring with Telegram
+
+```typescript
+interface ErrorDetails {
+  service: string
+  error: string
+  stack?: string
+  timestamp: Date
+  severity: 'low' | 'medium' | 'high' | 'critical'
+}
+
+async function sendErrorAlert(chatId: string, error: ErrorDetails) {
+  const severityEmoji = {
+    low: '🟢',
+    medium: '🟡',
+    high: '🟠',
+    critical: '🔴',
+  }
+
+  const result = await comms.send({
+    telegram: {
+      chatId,
+      text: `
+${severityEmoji[error.severity]} <b>Error Alert - ${error.severity.toUpperCase()}</b>
+
+<b>Service:</b> <code>${error.service}</code>
+<b>Time:</b> ${error.timestamp.toISOString()}
+
+<b>Error:</b>
+<pre>${error.error}</pre>
+
+${error.stack ? `<b>Stack Trace:</b>\n<pre>${error.stack.substring(0, 500)}</pre>` : ''}
+      `.trim(),
+      parseMode: 'HTML',
+      // Critical errors should alert immediately
+      disableNotification: error.severity === 'low',
+    },
+  })
+
+  return result
+}
+
+// Usage in error handler
+try {
+  await criticalOperation()
+} catch (error) {
+  await sendErrorAlert('-1001234567890', {
+    service: 'PaymentProcessor',
+    error: error.message,
+    stack: error.stack,
+    timestamp: new Date(),
+    severity: 'critical',
+  })
+}
+```
+
+### Multi-Language Notifications
+
+```typescript
+async function sendLocalizedMessage(
+  chatId: string,
+  userId: string,
+  messageKey: string
+) {
+  const user = await getUserProfile(userId)
+  const language = user.language || 'en'
+
+  const messages: Record<string, Record<string, string>> = {
+    en: {
+      welcome: 'Welcome to our platform! 🎉',
+      reminder: 'You have a pending task',
+    },
+    es: {
+      welcome: '¡Bienvenido a nuestra plataforma! 🎉',
+      reminder: 'Tienes una tarea pendiente',
+    },
+    fr: {
+      welcome: 'Bienvenue sur notre plateforme ! 🎉',
+      reminder: 'Vous avez une tâche en attente',
+    },
+    de: {
+      welcome: 'Willkommen auf unserer Plattform! 🎉',
+      reminder: 'Sie haben eine ausstehende Aufgabe',
+    },
+  }
+
+  const text = messages[language]?.[messageKey] || messages.en[messageKey]
+
+  return await comms.send({
+    telegram: {
+      chatId,
+      text,
+    },
+  })
+}
+
+await sendLocalizedMessage('123456789', 'user-456', 'welcome')
+```
+
+---
+
 ## Multi-Channel Examples
 
 ### Send Notification to All Channels
@@ -732,6 +1034,105 @@ const geographicRoutingStrategy: StrategyFunction<SmsRequest> = (providers) => {
   }
 }
 ```
+
+### Custom Strategy: Weighted Selection
+
+```typescript
+import type { StrategyFunction, Provider } from '@webventures/comms'
+
+interface WeightedProvider extends Provider {
+  weight: number // Higher weight = higher probability
+}
+
+/**
+ * Weighted strategy - selects providers based on probability weights
+ * Useful for gradual rollouts, A/B testing, or load distribution
+ */
+const weightedStrategy: StrategyFunction = (providers: Provider[]) => {
+  const weighted = providers as WeightedProvider[]
+  const totalWeight = weighted.reduce((sum, p) => sum + (p.weight || 1), 0)
+
+  return async (request) => {
+    // Select provider based on weighted probability
+    let random = Math.random() * totalWeight
+    let selectedProvider: Provider | undefined
+
+    for (const provider of weighted) {
+      random -= provider.weight || 1
+      if (random <= 0) {
+        selectedProvider = provider
+        break
+      }
+    }
+
+    // Fallback to first provider if selection fails
+    selectedProvider = selectedProvider || weighted[0]
+
+    if (!selectedProvider) {
+      throw new Error('No providers available')
+    }
+
+    try {
+      const id = await selectedProvider.send(request)
+      return { id, providerId: selectedProvider.id }
+    } catch (error) {
+      // Optionally implement fallback to other providers
+      if (error instanceof Error) {
+        ;(error as Error & { providerId?: string }).providerId = selectedProvider.id
+      }
+      throw error
+    }
+  }
+}
+
+const comms = new CommsSdk({
+  channels: {
+    email: {
+      multiProviderStrategy: weightedStrategy,
+      providers: [
+        {
+          type: 'sendgrid',
+          apiKey: process.env.SENDGRID_KEY,
+          weight: 70, // 70% of traffic
+        } as any,
+        {
+          type: 'ses',
+          region: 'us-east-1',
+          accessKeyId: process.env.AWS_KEY,
+          secretAccessKey: process.env.AWS_SECRET,
+          weight: 20, // 20% of traffic
+        } as any,
+        {
+          type: 'mailgun',
+          apiKey: process.env.MAILGUN_KEY,
+          domainName: 'mg.example.com',
+          weight: 10, // 10% of traffic (testing new provider)
+        } as any,
+      ],
+    },
+  },
+})
+
+// Send 1000 emails - distribution will be approximately 70/20/10
+for (let i = 0; i < 1000; i++) {
+  await comms.send({
+    email: {
+      from: 'noreply@example.com',
+      to: `user${i}@example.com`,
+      subject: 'Test',
+      text: 'Testing weighted distribution',
+    },
+  })
+}
+```
+
+**Use Cases for Weighted Strategy:**
+
+- **Gradual Rollout**: Start with 10% traffic to new provider, gradually increase
+- **A/B Testing**: Split traffic to compare provider performance
+- **Cost Optimization**: Route more traffic to cheaper providers
+- **Load Balancing**: Distribute based on provider capacity
+- **Geographic Distribution**: Weight providers by user location
 
 ---
 
