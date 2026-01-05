@@ -1,6 +1,6 @@
 {
   "name": "@webventures/comms",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "WebVentures Comms SDK - Unified communication SDK for TypeScript & JavaScript. Send emails, SMS, push notifications, and more with a single, type-safe API. First-class support for Next.js 16+, React 19, React Native, and Expo.",
   "keywords": [
     "notification",
