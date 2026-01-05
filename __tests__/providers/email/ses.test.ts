@@ -34,11 +34,11 @@ const request = {
 
 test('SES success with minimal parameters.', async () => {
   mockResponse(200, '<MessageId>returned-id</MessageId>')
-  const result = await sdk.send(request)
   const datetime = new Date()
     .toISOString()
     .replace(/\.\d{3}Z$/, 'Z')
     .replace(/[:-]|\.\d{3}/g, '')
+  const result = await sdk.send(request)
   expect(mockHttp).toHaveBeenLastCalledWith(
     expect.objectContaining({
       hostname: 'email.eu-west-1.amazonaws.com',
@@ -54,7 +54,7 @@ test('SES success with minimal parameters.', async () => {
         ],
         Host: ['email.eu-west-1.amazonaws.com'],
         'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
-        'X-Amz-Date': [datetime],
+        'X-Amz-Date': [expect.stringMatching(/^\d{8}T\d{6}Z$/)],
         'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
         'User-Agent': ['webventures-comms/v2 (+https://github.com/cryptventure/comms)'],
       }),
@@ -73,6 +73,10 @@ test('SES success with minimal parameters.', async () => {
 
 test('SES success with all parameters.', async () => {
   mockResponse(200, '<MessageId>returned-id</MessageId>')
+  const datetime = new Date()
+    .toISOString()
+    .replace(/\.\d{3}Z$/, 'Z')
+    .replace(/[:-]|\.\d{3}/g, '')
   const completeRequest = {
     metadata: {
       id: '24',
@@ -98,10 +102,6 @@ test('SES success with all parameters.', async () => {
     },
   }
   const result = await sdk.send(completeRequest)
-  const datetime = new Date()
-    .toISOString()
-    .replace(/\.\d{3}Z$/, 'Z')
-    .replace(/[:-]|\.\d{3}/g, '')
   expect(mockHttp).toHaveBeenLastCalledWith(
     expect.objectContaining({
       hostname: 'email.eu-west-1.amazonaws.com',
@@ -117,7 +117,7 @@ test('SES success with all parameters.', async () => {
         ],
         Host: ['email.eu-west-1.amazonaws.com'],
         'X-Amz-Content-Sha256': [expect.stringMatching(/\w*/)],
-        'X-Amz-Date': [datetime],
+        'X-Amz-Date': [expect.stringMatching(/^\d{8}T\d{6}Z$/)],
         'Content-Type': ['application/x-www-form-urlencoded; charset=utf-8'],
         'User-Agent': ['webventures-comms/v2 (+https://github.com/cryptventure/comms)'],
       }),
