@@ -1,0 +1,25 @@
+{
+  "active": true,
+  "spec": "004-add-telegram-channel-and-provider",
+  "state": "building",
+  "subtasks": {
+    "completed": 10,
+    "total": 14,
+    "in_progress": 1,
+    "failed": 0
+  },
+  "phase": {
+    "current": "Tests",
+    "id": null,
+    "total": 3
+  },
+  "workers": {
+    "active": 0,
+    "max": 1
+  },
+  "session": {
+    "number": 12,
+    "started_at": "2026-01-04T23:40:23.994394"
+  },
+  "last_update": "2026-01-05T00:10:01.167428"
+}
