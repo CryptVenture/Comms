@@ -11,6 +11,7 @@ export default defineConfig({
     'providers/webpush': 'src/providers/webpush/index.ts',
     'providers/slack': 'src/providers/slack/index.ts',
     'providers/whatsapp': 'src/providers/whatsapp/index.ts',
+    'providers/telegram': 'src/providers/telegram/index.ts',
     // Export strategies
     'strategies/fallback': 'src/strategies/providers/fallback.ts',
     'strategies/roundrobin': 'src/strategies/providers/roundrobin.ts',
