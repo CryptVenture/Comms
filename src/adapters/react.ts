@@ -3,6 +3,8 @@
  * Provides hooks and utilities for React 19 applications
  */
 
+import { NetworkError } from '../types/errors'
+
 /**
  * Note: WebVentures Comms SDK should NOT be used directly in React client components
  * as it requires API keys and server-side execution.
@@ -46,7 +48,7 @@ export function useCommsBackend(baseUrl: string) {
     })
 
     if (!response.ok) {
-      throw new Error(`Failed to send notification: ${response.statusText}`)
+      throw new NetworkError(`Failed to send notification: ${response.statusText}`, response.status)
     }
 
     return response.json()
