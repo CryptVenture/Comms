@@ -1,6 +1,7 @@
 import { vi, test, expect } from 'vitest'
 import strategyFallback from '../../../src/strategies/providers/fallback'
 import logger from '../../../src/util/logger'
+import { ConfigurationError } from '../../../src/types/errors'
 
 vi.mock('../../../src/util/logger', () => ({
   default: {
@@ -68,4 +69,14 @@ test('Fallback strategy should call all providers and throw error if all failed.
   expect(error).toEqual(
     expect.objectContaining({ message: 'error provider 2', providerId: 'sms-provider-2' })
   )
+})
+
+test('Fallback strategy should throw ConfigurationError when no providers are given.', () => {
+  expect(() => strategyFallback([])).toThrow(ConfigurationError)
+  expect(() => strategyFallback([])).toThrow('Fallback strategy requires at least one provider')
+})
+
+test('Fallback strategy should throw ConfigurationError when providers array is null/undefined.', () => {
+  expect(() => strategyFallback(null as any)).toThrow(ConfigurationError)
+  expect(() => strategyFallback(undefined as any)).toThrow(ConfigurationError)
 })
