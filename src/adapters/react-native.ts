@@ -4,6 +4,7 @@
  */
 
 import type { CommsSdkConfig } from '../types/config'
+import { NetworkError } from '../types/errors'
 import { CommsSdk } from '../index'
 
 /**
@@ -87,7 +88,10 @@ export function createCommsBackendClient(baseUrl: string) {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to send notification: ${response.statusText}`)
+        throw new NetworkError(
+          `Failed to send notification: ${response.statusText}`,
+          response.status
+        )
       }
 
       return response.json()
