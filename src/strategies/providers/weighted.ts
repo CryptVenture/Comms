@@ -69,6 +69,7 @@
  */
 
 import logger from '../../util/logger'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { ProviderSendResult } from '../../types/responses'
 import type { WeightedProvider, WeightedStrategyFunction } from '../../types/strategies'
 
@@ -121,6 +122,7 @@ function selectWeightedProvider<TRequest>(
  * @param providers - Array of weighted providers to try
  * @param request - Request to send through providers
  * @returns Promise resolving to provider send result
+ * @throws {ProviderError} If no providers are available
  * @throws Error from the last provider if all providers fail
  *
  * @internal
@@ -131,7 +133,12 @@ async function recursiveWeightedTry<TRequest>(
 ): Promise<ProviderSendResult> {
   // Validate that we have providers
   if (providers.length === 0) {
-    throw new Error('No providers available')
+    throw new ProviderError(
+      'No providers available',
+      'weighted-strategy',
+      undefined,
+      'WEIGHTED_NO_PROVIDERS'
+    )
   }
 
   // Select a provider based on weights
@@ -139,7 +146,12 @@ async function recursiveWeightedTry<TRequest>(
 
   // Validate selection
   if (!selected) {
-    throw new Error('No providers available')
+    throw new ProviderError(
+      'No providers available',
+      'weighted-strategy',
+      undefined,
+      'WEIGHTED_NO_PROVIDERS'
+    )
   }
 
   try {
@@ -179,7 +191,8 @@ async function recursiveWeightedTry<TRequest>(
  * @param providers - Array of weighted providers to use for sending
  * @returns Send function that implements weighted selection with fallback
  *
- * @throws Error if providers array is empty
+ * @throws {ConfigurationError} If providers array is empty
+ * @throws {ConfigurationError} If any provider has an invalid weight
  * @throws Error from last provider if all providers fail
  */
 const strategyWeighted: WeightedStrategyFunction = <TRequest = unknown>(
@@ -187,14 +200,18 @@ const strategyWeighted: WeightedStrategyFunction = <TRequest = unknown>(
 ) => {
   // Validate providers array
   if (!providers || providers.length === 0) {
-    throw new Error('Weighted strategy requires at least one provider')
+    throw new ConfigurationError(
+      'Weighted strategy requires at least one provider',
+      'WEIGHTED_REQUIRES_PROVIDER'
+    )
   }
 
   // Validate that all providers have weight property
   for (const provider of providers) {
     if (typeof provider.weight !== 'number' || provider.weight < 0) {
-      throw new Error(
-        `Provider "${provider.id}" must have a non-negative weight. Got: ${provider.weight}`
+      throw new ConfigurationError(
+        `Provider "${provider.id}" must have a non-negative weight. Got: ${provider.weight}`,
+        'WEIGHTED_INVALID_WEIGHT'
       )
     }
   }
