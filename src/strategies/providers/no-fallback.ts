@@ -52,6 +52,7 @@
  */
 
 import logger from '../../util/logger'
+import { ConfigurationError, ProviderError } from '../../types/errors'
 import type { Provider } from '../../types'
 import type { ProviderSendResult } from '../../types/responses'
 import type { StrategyFunction } from '../../types/strategies'
@@ -67,7 +68,8 @@ import type { StrategyFunction } from '../../types/strategies'
  * @param providers - Array containing exactly one provider
  * @returns Send function that implements no-fallback logic
  *
- * @throws Error if providers array is empty or contains more than one provider
+ * @throws {ConfigurationError} If providers array is empty or contains more than one provider
+ * @throws {ProviderError} If no provider is available at runtime
  * @throws Error from provider if send fails
  */
 const strategyNoFallback: StrategyFunction = <TRequest = unknown>(
@@ -75,13 +77,17 @@ const strategyNoFallback: StrategyFunction = <TRequest = unknown>(
 ) => {
   // Validate that we have exactly one provider
   if (!providers || providers.length === 0) {
-    throw new Error('No-fallback strategy requires exactly one provider')
+    throw new ConfigurationError(
+      'No-fallback strategy requires exactly one provider',
+      'NOFALLBACK_REQUIRES_PROVIDER'
+    )
   }
 
   if (providers.length > 1) {
-    throw new Error(
+    throw new ConfigurationError(
       `No-fallback strategy requires exactly one provider, but ${providers.length} were provided. ` +
-        'Use "fallback" or "roundrobin" strategy for multiple providers.'
+        'Use "fallback" or "roundrobin" strategy for multiple providers.',
+      'NOFALLBACK_TOO_MANY_PROVIDERS'
     )
   }
 
@@ -90,7 +96,12 @@ const strategyNoFallback: StrategyFunction = <TRequest = unknown>(
 
   // Ensure provider exists (should always be true after validation, but TypeScript doesn't know that)
   if (!provider) {
-    throw new Error('No provider available after validation')
+    throw new ProviderError(
+      'No provider available after validation',
+      'no-fallback-strategy',
+      undefined,
+      'NOFALLBACK_NO_PROVIDER'
+    )
   }
 
   // Return the send function
