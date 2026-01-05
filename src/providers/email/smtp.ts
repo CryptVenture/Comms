@@ -82,7 +82,8 @@ export interface SmtpConfig {
  *   }
  * })
  *
- * // With TLS options
+ * // Secure TLS configuration with custom CA certificate
+ * import fs from 'fs'
  * const provider = new EmailSmtpProvider({
  *   host: 'smtp.example.com',
  *   port: 465,
@@ -92,7 +93,8 @@ export interface SmtpConfig {
  *     pass: 'password'
  *   },
  *   tls: {
- *     rejectUnauthorized: false
+ *     // Specify custom CA certificate if needed
+ *     ca: fs.readFileSync('/path/to/ca-cert.pem')
  *   }
  * })
  *
@@ -105,6 +107,17 @@ export interface SmtpConfig {
  *   html: '<p>Hello world</p>'
  * })
  * ```
+ *
+ * **Security Warning: TLS Certificate Verification**
+ *
+ * Never set `tls.rejectUnauthorized = false` in production. This disables TLS
+ * certificate verification and makes your connection vulnerable to man-in-the-middle
+ * attacks. Attackers can intercept emails by presenting fraudulent certificates.
+ *
+ * For development with self-signed certificates, use one of these secure alternatives:
+ * - Add your self-signed certificate to the system's trusted CA store
+ * - Specify the CA certificate explicitly: `tls: { ca: fs.readFileSync('ca.pem') }`
+ * - Use a proper certificate from Let's Encrypt (free) for development servers
  *
  * @see https://nodemailer.com/smtp/
  */
