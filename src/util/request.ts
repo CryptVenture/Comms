@@ -1,5 +1,12 @@
 import { request as undiciRequest, Dispatcher } from 'undici'
 import { HttpsProxyAgent } from 'https-proxy-agent'
+import { withRetry, type RetryOptions, type ShouldRetryContext } from './retry'
+
+/**
+ * HTTP methods that are considered safe to retry (idempotent and have no side effects)
+ * These methods can be safely retried without risk of duplicate operations
+ */
+const SAFE_RETRY_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const
 
 /**
  * Custom error class for HTTP request errors
@@ -34,6 +41,23 @@ export interface RequestOptions {
   // Undici-specific options
   maxRedirections?: number
   throwOnError?: boolean
+  /**
+   * Optional retry configuration for automatic request retry with exponential backoff.
+   * When provided, failed requests will be retried according to the specified options.
+   * If not provided, no retries will occur (backward compatible).
+   *
+   * @example
+   * ```typescript
+   * const response = await request('https://api.example.com/data', {
+   *   retry: {
+   *     maxRetries: 3,
+   *     baseDelay: 1000,
+   *     retryableStatusCodes: [429, 500, 502, 503, 504]
+   *   }
+   * })
+   * ```
+   */
+  retry?: RetryOptions
 }
 
 /**
@@ -76,86 +100,116 @@ export default async function request(
   url: string,
   options: RequestOptions = {}
 ): Promise<globalThis.Response> {
-  try {
-    // Validate URL
-    if (!url || typeof url !== 'string') {
-      throw new RequestError('Invalid URL: URL must be a non-empty string', undefined, url)
-    }
-
-    // Parse URL to validate format
-    try {
-      new globalThis.URL(url)
-    } catch (error) {
-      throw new RequestError(`Invalid URL format: ${url}`, undefined, url, error)
-    }
-
-    // Configure HTTPS proxy if environment variable is set
-    // This is common in enterprise environments
-    const proxyUrl = process.env.COMMS_HTTP_PROXY
-    if (!options.agent && proxyUrl) {
-      try {
-        options.agent = new HttpsProxyAgent(proxyUrl) as unknown as Dispatcher
-      } catch (error) {
-        throw new RequestError(`Failed to configure proxy: ${proxyUrl}`, undefined, url, error)
-      }
-    }
-
-    // Use undici's request function for Node.js environments
-    // This provides better performance and is the foundation of native fetch in Node 18+
-    const { statusCode, headers, body } = await undiciRequest(url, {
-      method: options.method || 'GET',
-      headers: options.headers,
-      body: options.body,
-      signal: options.signal,
-      dispatcher: options.agent,
-    })
-
-    // Convert undici response to standard Response object for API consistency
-    const responseHeaders = new globalThis.Headers()
-    if (headers) {
-      Object.entries(headers).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((v) => responseHeaders.append(key, v))
-        } else if (value !== undefined) {
-          responseHeaders.set(key, value.toString())
-        }
-      })
-    }
-
-    // Read the body stream
-    const chunks: Uint8Array[] = []
-    for await (const chunk of body) {
-      chunks.push(chunk)
-    }
-    const buffer = Buffer.concat(chunks)
-
-    // Create a standard Response object
-    const response = new globalThis.Response(buffer, {
-      status: statusCode,
-      statusText: getStatusText(statusCode),
-      headers: responseHeaders,
-    })
-
-    // Optionally throw on error status codes
-    if (options.throwOnError && !response.ok) {
-      throw new RequestError(`HTTP ${statusCode}: ${getStatusText(statusCode)}`, statusCode, url)
-    }
-
-    return response
-  } catch (error) {
-    // If it's already a RequestError, rethrow it
-    if (error instanceof RequestError) {
-      throw error
-    }
-
-    // Wrap other errors
-    throw new RequestError(
-      `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      undefined,
-      url,
-      error
-    )
+  // Validate URL upfront (outside retry logic - invalid URLs should not be retried)
+  if (!url || typeof url !== 'string') {
+    throw new RequestError('Invalid URL: URL must be a non-empty string', undefined, url)
   }
+
+  try {
+    new globalThis.URL(url)
+  } catch (error) {
+    throw new RequestError(`Invalid URL format: ${url}`, undefined, url, error)
+  }
+
+  // Configure HTTPS proxy if environment variable is set (do once, outside retry)
+  const proxyUrl = process.env.COMMS_HTTP_PROXY
+  if (!options.agent && proxyUrl) {
+    try {
+      options.agent = new HttpsProxyAgent(proxyUrl) as unknown as Dispatcher
+    } catch (error) {
+      throw new RequestError(`Failed to configure proxy: ${proxyUrl}`, undefined, url, error)
+    }
+  }
+
+  // Core request execution logic
+  const executeRequest = async (): Promise<globalThis.Response> => {
+    try {
+      // Use undici's request function for Node.js environments
+      // This provides better performance and is the foundation of native fetch in Node 18+
+      const { statusCode, headers, body } = await undiciRequest(url, {
+        method: options.method || 'GET',
+        headers: options.headers,
+        body: options.body,
+        signal: options.signal,
+        dispatcher: options.agent,
+      })
+
+      // Convert undici response to standard Response object for API consistency
+      const responseHeaders = new globalThis.Headers()
+      if (headers) {
+        Object.entries(headers).forEach(([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach((v) => responseHeaders.append(key, v))
+          } else if (value !== undefined) {
+            responseHeaders.set(key, value.toString())
+          }
+        })
+      }
+
+      // Read the body stream
+      const chunks: Uint8Array[] = []
+      for await (const chunk of body) {
+        chunks.push(chunk)
+      }
+      const buffer = Buffer.concat(chunks)
+
+      // Create a standard Response object
+      const response = new globalThis.Response(buffer, {
+        status: statusCode,
+        statusText: getStatusText(statusCode),
+        headers: responseHeaders,
+      })
+
+      // Optionally throw on error status codes (makes them retryable)
+      if (options.throwOnError && !response.ok) {
+        throw new RequestError(`HTTP ${statusCode}: ${getStatusText(statusCode)}`, statusCode, url)
+      }
+
+      return response
+    } catch (error) {
+      // If it's already a RequestError, rethrow it
+      if (error instanceof RequestError) {
+        throw error
+      }
+
+      // Wrap other errors (network errors, etc.)
+      throw new RequestError(
+        `Request failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        undefined,
+        url,
+        error
+      )
+    }
+  }
+
+  // If retry options are provided, wrap with retry logic
+  if (options.retry) {
+    const method = (options.method || 'GET').toUpperCase()
+    const isSafeMethod = SAFE_RETRY_METHODS.includes(method as (typeof SAFE_RETRY_METHODS)[number])
+
+    // Build retry options with safe method check
+    const retryOptions: RetryOptions = {
+      ...options.retry,
+      // Propagate abort signal if not already set in retry options
+      signal: options.retry.signal ?? options.signal,
+    }
+
+    // If no custom shouldRetry is provided, add safe method check to default behavior
+    if (!options.retry.shouldRetry && !isSafeMethod) {
+      // Non-safe methods (POST, PUT, DELETE, PATCH) don't retry by default
+      // to prevent duplicate side effects. User can override with shouldRetry.
+      retryOptions.shouldRetry = () => false
+    } else if (options.retry.shouldRetry && !isSafeMethod) {
+      // User provided custom shouldRetry - let them decide but warn via wrapped callback
+      const userShouldRetry = options.retry.shouldRetry
+      retryOptions.shouldRetry = (context: ShouldRetryContext) => userShouldRetry(context)
+    }
+
+    return withRetry(executeRequest, retryOptions)
+  }
+
+  // No retry - execute once
+  return executeRequest()
 }
 
 /**

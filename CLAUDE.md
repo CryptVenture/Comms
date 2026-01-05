@@ -465,7 +465,9 @@ export default class ChannelProviderNameProvider implements Provider<ChannelRequ
    })
    ```
 
-7. **JSDoc Documentation**: All providers must have:
+7. **Request Retry with Exponential Backoff**: The request utility supports automatic retry with exponential backoff for transient failures. See [Retry Utility](#retry-utility) section below for details.
+
+8. **JSDoc Documentation**: All providers must have:
    - Class-level JSDoc with description, links to docs, and usage example
    - Parameter documentation for complex config objects
    - Return type documentation if not obvious
@@ -850,6 +852,171 @@ const result2 = await provider2.send(request)
 - Reuse connections via keepAlive (handled by undici automatically)
 - Set appropriate timeouts (default 30s in `src/util/request.ts`)
 - Use streaming for large payloads when supported
+
+## Retry Utility
+
+The SDK provides a built-in retry mechanism with exponential backoff for handling transient failures. This is available in two ways: integrated into the `request` function and as a standalone `withRetry` wrapper.
+
+### Using Retry with the Request Function
+
+The simplest way to add retry logic is via the `retry` option in the `request` function:
+
+```typescript
+import request from 'src/util/request'
+
+// Basic retry with defaults (3 retries, 1s base delay)
+const response = await request('https://api.example.com/data', {
+  retry: { maxRetries: 3 }
+})
+
+// Custom retry configuration
+const response = await request('https://api.example.com/data', {
+  retry: {
+    maxRetries: 5,
+    baseDelay: 500,        // Start with 500ms delay
+    maxDelay: 10000,       // Cap at 10 seconds
+    retryableStatusCodes: [429, 500, 502, 503, 504],
+    onRetry: ({ attempt, error, delay }) => {
+      console.log(`Retry ${attempt} after ${delay}ms: ${error.message}`)
+    }
+  }
+})
+```
+
+**Important**: By default, only safe HTTP methods (GET, HEAD, OPTIONS) are retried. POST, PUT, DELETE, and PATCH requests are NOT retried to prevent duplicate side effects. To enable retry for unsafe methods, provide a custom `shouldRetry` callback:
+
+```typescript
+// Enable retry for POST request (use with caution!)
+const response = await request('https://api.example.com/data', {
+  method: 'POST',
+  body: JSON.stringify({ key: 'value' }),
+  retry: {
+    maxRetries: 3,
+    shouldRetry: ({ statusCode }) => {
+      // Only retry on rate limiting
+      return statusCode === 429
+    }
+  }
+})
+```
+
+### Using withRetry Directly
+
+For non-HTTP operations or more control, use the `withRetry` wrapper:
+
+```typescript
+import { withRetry } from '@webventures/comms'
+
+// Retry any async function
+const result = await withRetry(
+  () => someAsyncOperation(),
+  { maxRetries: 3 }
+)
+
+// With full configuration
+const result = await withRetry(
+  () => callExternalService(),
+  {
+    maxRetries: 5,
+    baseDelay: 500,
+    maxDelay: 10000,
+    jitter: true,
+    maxJitter: 500,
+    shouldRetry: ({ error, statusCode, attempt }) => {
+      // Custom retry logic
+      if (attempt > 3) return false
+      return statusCode === 429 || (statusCode !== undefined && statusCode >= 500)
+    },
+    onRetry: ({ attempt, error, delay }) => {
+      logger.warn(`Retry ${attempt} in ${delay}ms: ${error.message}`)
+    },
+    signal: AbortSignal.timeout(30000)  // Timeout after 30 seconds
+  }
+)
+```
+
+### Retry Configuration Options
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| `maxRetries` | number | 3 | Maximum retry attempts (0 = no retries) |
+| `baseDelay` | number | 1000 | Base delay in milliseconds |
+| `maxDelay` | number | 30000 | Maximum delay cap in milliseconds |
+| `jitter` | boolean | true | Add random jitter to prevent thundering herd |
+| `maxJitter` | number | 1000 | Maximum jitter in milliseconds |
+| `retryableStatusCodes` | number[] | [408, 429, 500, 502, 503, 504] | Status codes that trigger retry |
+| `shouldRetry` | function | - | Custom callback for retry decisions |
+| `onRetry` | function | - | Callback fired before each retry (for logging) |
+| `signal` | AbortSignal | - | Signal to cancel retries |
+
+### Default Retry Behavior
+
+With default settings, retry delays follow exponential backoff:
+- Retry 1: ~1000ms + jitter (1-2 seconds total)
+- Retry 2: ~2000ms + jitter (2-3 seconds total)
+- Retry 3: ~4000ms + jitter (4-5 seconds total)
+
+**Default retryable status codes:**
+- 408: Request Timeout
+- 429: Too Many Requests (rate limiting)
+- 500: Internal Server Error
+- 502: Bad Gateway
+- 503: Service Unavailable
+- 504: Gateway Timeout
+
+**Network errors** (ECONNREFUSED, ETIMEDOUT, etc.) are retried by default when no status code is present.
+
+### Best Practices
+
+1. **Use retry sparingly in providers**: Most external APIs have their own rate limiting. Use modest retry settings (2-3 retries) to avoid overwhelming the API.
+
+2. **Enable jitter in production**: Jitter prevents the "thundering herd" problem where multiple clients retry simultaneously.
+
+3. **Set appropriate timeouts**: Combine retry with AbortSignal timeout to prevent indefinite waiting:
+   ```typescript
+   const response = await request(url, {
+     signal: AbortSignal.timeout(30000),  // 30s overall timeout
+     retry: { maxRetries: 3 }
+   })
+   ```
+
+4. **Log retries for observability**: Use the `onRetry` callback to log retry attempts for debugging and monitoring:
+   ```typescript
+   onRetry: ({ attempt, error, delay }) => {
+     logger.warn(`Retry ${attempt}/${maxRetries} in ${delay}ms`, {
+       error: error.message,
+       url: 'https://api.example.com/endpoint'
+     })
+   }
+   ```
+
+5. **Be careful with non-idempotent requests**: Only retry POST/PUT/DELETE if the operation is idempotent or you handle duplicates server-side.
+
+### Exported Types and Functions
+
+All retry utilities are exported from the main package:
+
+```typescript
+import {
+  // Functions
+  withRetry,
+  calculateBackoff,
+  delay,
+  getRetryOptionsWithDefaults,
+  isRetryableStatusCode,
+  getStatusCodeFromError,
+
+  // Constants
+  DEFAULT_RETRY_OPTIONS,
+  DEFAULT_RETRYABLE_STATUS_CODES,
+
+  // Types
+  type RetryOptions,
+  type RetryAttemptInfo,
+  type ShouldRetryContext,
+  type BackoffOptions
+} from '@webventures/comms'
+```
 
 ## Coverage Requirements
 
