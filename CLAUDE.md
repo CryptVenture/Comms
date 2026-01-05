@@ -866,20 +866,20 @@ import request from 'src/util/request'
 
 // Basic retry with defaults (3 retries, 1s base delay)
 const response = await request('https://api.example.com/data', {
-  retry: { maxRetries: 3 }
+  retry: { maxRetries: 3 },
 })
 
 // Custom retry configuration
 const response = await request('https://api.example.com/data', {
   retry: {
     maxRetries: 5,
-    baseDelay: 500,        // Start with 500ms delay
-    maxDelay: 10000,       // Cap at 10 seconds
+    baseDelay: 500, // Start with 500ms delay
+    maxDelay: 10000, // Cap at 10 seconds
     retryableStatusCodes: [429, 500, 502, 503, 504],
     onRetry: ({ attempt, error, delay }) => {
       console.log(`Retry ${attempt} after ${delay}ms: ${error.message}`)
-    }
-  }
+    },
+  },
 })
 ```
 
@@ -895,8 +895,8 @@ const response = await request('https://api.example.com/data', {
     shouldRetry: ({ statusCode }) => {
       // Only retry on rate limiting
       return statusCode === 429
-    }
-  }
+    },
+  },
 })
 ```
 
@@ -908,55 +908,51 @@ For non-HTTP operations or more control, use the `withRetry` wrapper:
 import { withRetry } from '@webventures/comms'
 
 // Retry any async function
-const result = await withRetry(
-  () => someAsyncOperation(),
-  { maxRetries: 3 }
-)
+const result = await withRetry(() => someAsyncOperation(), { maxRetries: 3 })
 
 // With full configuration
-const result = await withRetry(
-  () => callExternalService(),
-  {
-    maxRetries: 5,
-    baseDelay: 500,
-    maxDelay: 10000,
-    jitter: true,
-    maxJitter: 500,
-    shouldRetry: ({ error, statusCode, attempt }) => {
-      // Custom retry logic
-      if (attempt > 3) return false
-      return statusCode === 429 || (statusCode !== undefined && statusCode >= 500)
-    },
-    onRetry: ({ attempt, error, delay }) => {
-      logger.warn(`Retry ${attempt} in ${delay}ms: ${error.message}`)
-    },
-    signal: AbortSignal.timeout(30000)  // Timeout after 30 seconds
-  }
-)
+const result = await withRetry(() => callExternalService(), {
+  maxRetries: 5,
+  baseDelay: 500,
+  maxDelay: 10000,
+  jitter: true,
+  maxJitter: 500,
+  shouldRetry: ({ error, statusCode, attempt }) => {
+    // Custom retry logic
+    if (attempt > 3) return false
+    return statusCode === 429 || (statusCode !== undefined && statusCode >= 500)
+  },
+  onRetry: ({ attempt, error, delay }) => {
+    logger.warn(`Retry ${attempt} in ${delay}ms: ${error.message}`)
+  },
+  signal: AbortSignal.timeout(30000), // Timeout after 30 seconds
+})
 ```
 
 ### Retry Configuration Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `maxRetries` | number | 3 | Maximum retry attempts (0 = no retries) |
-| `baseDelay` | number | 1000 | Base delay in milliseconds |
-| `maxDelay` | number | 30000 | Maximum delay cap in milliseconds |
-| `jitter` | boolean | true | Add random jitter to prevent thundering herd |
-| `maxJitter` | number | 1000 | Maximum jitter in milliseconds |
-| `retryableStatusCodes` | number[] | [408, 429, 500, 502, 503, 504] | Status codes that trigger retry |
-| `shouldRetry` | function | - | Custom callback for retry decisions |
-| `onRetry` | function | - | Callback fired before each retry (for logging) |
-| `signal` | AbortSignal | - | Signal to cancel retries |
+| Option                 | Type        | Default                        | Description                                    |
+| ---------------------- | ----------- | ------------------------------ | ---------------------------------------------- |
+| `maxRetries`           | number      | 3                              | Maximum retry attempts (0 = no retries)        |
+| `baseDelay`            | number      | 1000                           | Base delay in milliseconds                     |
+| `maxDelay`             | number      | 30000                          | Maximum delay cap in milliseconds              |
+| `jitter`               | boolean     | true                           | Add random jitter to prevent thundering herd   |
+| `maxJitter`            | number      | 1000                           | Maximum jitter in milliseconds                 |
+| `retryableStatusCodes` | number[]    | [408, 429, 500, 502, 503, 504] | Status codes that trigger retry                |
+| `shouldRetry`          | function    | -                              | Custom callback for retry decisions            |
+| `onRetry`              | function    | -                              | Callback fired before each retry (for logging) |
+| `signal`               | AbortSignal | -                              | Signal to cancel retries                       |
 
 ### Default Retry Behavior
 
 With default settings, retry delays follow exponential backoff:
+
 - Retry 1: ~1000ms + jitter (1-2 seconds total)
 - Retry 2: ~2000ms + jitter (2-3 seconds total)
 - Retry 3: ~4000ms + jitter (4-5 seconds total)
 
 **Default retryable status codes:**
+
 - 408: Request Timeout
 - 429: Too Many Requests (rate limiting)
 - 500: Internal Server Error
@@ -973,19 +969,21 @@ With default settings, retry delays follow exponential backoff:
 2. **Enable jitter in production**: Jitter prevents the "thundering herd" problem where multiple clients retry simultaneously.
 
 3. **Set appropriate timeouts**: Combine retry with AbortSignal timeout to prevent indefinite waiting:
+
    ```typescript
    const response = await request(url, {
-     signal: AbortSignal.timeout(30000),  // 30s overall timeout
-     retry: { maxRetries: 3 }
+     signal: AbortSignal.timeout(30000), // 30s overall timeout
+     retry: { maxRetries: 3 },
    })
    ```
 
 4. **Log retries for observability**: Use the `onRetry` callback to log retry attempts for debugging and monitoring:
+
    ```typescript
    onRetry: ({ attempt, error, delay }) => {
      logger.warn(`Retry ${attempt}/${maxRetries} in ${delay}ms`, {
        error: error.message,
-       url: 'https://api.example.com/endpoint'
+       url: 'https://api.example.com/endpoint',
      })
    }
    ```
@@ -1014,7 +1012,7 @@ import {
   type RetryOptions,
   type RetryAttemptInfo,
   type ShouldRetryContext,
-  type BackoffOptions
+  type BackoffOptions,
 } from '@webventures/comms'
 ```
 

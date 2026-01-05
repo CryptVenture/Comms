@@ -25,6 +25,9 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
+        global: 'readonly',
       },
     },
     plugins: {
@@ -67,6 +70,9 @@ export default [
         clearTimeout: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        AbortController: 'readonly',
+        AbortSignal: 'readonly',
+        global: 'readonly',
       },
     },
     plugins: {
