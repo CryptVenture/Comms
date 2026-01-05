@@ -9,6 +9,7 @@
  * - Webpush (browser push notifications)
  * - Slack
  * - WhatsApp
+ * - Telegram
  *
  * All request types extend RequestMetadata which provides common fields for
  * tracking and identifying notification requests.
@@ -654,6 +655,67 @@ export interface WhatsappRequest extends RequestMetadata {
 }
 
 /**
+ * Telegram notification request.
+ *
+ * Sends messages to Telegram chats, groups, or channels via the Telegram Bot API.
+ *
+ * @example
+ * ```typescript
+ * const telegramRequest: TelegramRequest = {
+ *   chatId: '-1001234567890',
+ *   text: 'Hello from Telegram!',
+ *   parseMode: 'HTML'
+ * };
+ * ```
+ */
+export interface TelegramRequest extends RequestMetadata {
+  /**
+   * Chat identifier for the target chat.
+   *
+   * Formats:
+   * - User chat: numeric ID (e.g., '123456789')
+   * - Group: negative numeric ID (e.g., '-1234567890')
+   * - Channel: negative ID starting with -100 (e.g., '-1001234567890')
+   * - Channel username: @channelname
+   */
+  chatId: string
+
+  /** Message text content (supports HTML, Markdown, or MarkdownV2 if parseMode is set) */
+  text: string
+
+  /**
+   * Mode for parsing entities in the message text.
+   * - 'HTML': HTML-style formatting
+   * - 'Markdown': Legacy Markdown formatting (deprecated by Telegram)
+   * - 'MarkdownV2': Extended Markdown formatting
+   *
+   * @see https://core.telegram.org/bots/api#formatting-options
+   */
+  parseMode?: 'HTML' | 'Markdown' | 'MarkdownV2'
+
+  /**
+   * Sends the message silently.
+   * Users will receive a notification with no sound.
+   */
+  disableNotification?: boolean
+
+  /**
+   * If the message is a reply, ID of the original message.
+   * Used for threading/replying in conversations.
+   */
+  replyToMessageId?: number
+
+  /**
+   * Optional customization function for provider-specific modifications.
+   *
+   * @param providerId - The ID of the Telegram provider being used
+   * @param request - The Telegram request to customize
+   * @returns Promise resolving to the customized Telegram request
+   */
+  customize?: (providerId: string, request: TelegramRequest) => Promise<TelegramRequest>
+}
+
+/**
  * Union type of all individual channel request types.
  *
  * Use this when handling a single channel request in isolation.
@@ -666,6 +728,7 @@ export type ChannelRequest =
   | WebpushRequest
   | SlackRequest
   | WhatsappRequest
+  | TelegramRequest
 
 /**
  * Notification request object for sending across multiple channels.
@@ -720,6 +783,9 @@ export interface NotificationRequest extends RequestMetadata {
   /** WhatsApp notification request data */
   whatsapp?: ChannelData<WhatsappRequest>
 
+  /** Telegram notification request data */
+  telegram?: ChannelData<TelegramRequest>
+
   /**
    * Additional custom channel data.
    * Used for custom channels defined in the SDK configuration.
@@ -742,6 +808,8 @@ export type WebpushRequestType = WebpushRequest
 export type SlackRequestType = SlackRequest
 /** @deprecated Use WhatsappRequest instead */
 export type WhatsappRequestType = WhatsappRequest
+/** @deprecated Use TelegramRequest instead */
+export type TelegramRequestType = TelegramRequest
 /** @deprecated Use NotificationRequest instead */
 export type RequestType = NotificationRequest
 /** @deprecated Use ChannelRequest instead */

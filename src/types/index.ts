@@ -13,7 +13,15 @@ export * from './strategies'
 /**
  * Channel types supported by the SDK
  */
-export type ChannelType = 'email' | 'sms' | 'push' | 'voice' | 'webpush' | 'slack' | 'whatsapp'
+export type ChannelType =
+  | 'email'
+  | 'sms'
+  | 'push'
+  | 'voice'
+  | 'webpush'
+  | 'slack'
+  | 'whatsapp'
+  | 'telegram'
 
 /**
  * Multi-provider strategy types

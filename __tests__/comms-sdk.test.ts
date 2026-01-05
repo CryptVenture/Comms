@@ -49,6 +49,10 @@ test('mergeWithDefaultConfig should set default config if config is empty.', () 
         multiProviderStrategy: 'fallback',
         providers: [],
       },
+      telegram: {
+        multiProviderStrategy: 'fallback',
+        providers: [],
+      },
     },
   })
 })
@@ -81,6 +85,10 @@ const config = {
       providers: [{ type: 'logger' }],
     },
     webpush: {
+      multiProviderStrategy: 'no-fallback',
+      providers: [{ type: 'logger' }],
+    },
+    telegram: {
       multiProviderStrategy: 'no-fallback',
       providers: [{ type: 'logger' }],
     },
@@ -141,6 +149,10 @@ test('mergeWithDefaultConfig should ignore config if useNotificationCatcher is t
         providers: [{ type: 'notificationcatcher' }],
       },
       webpush: {
+        multiProviderStrategy: 'no-fallback',
+        providers: [{ type: 'notificationcatcher' }],
+      },
+      telegram: {
         multiProviderStrategy: 'no-fallback',
         providers: [{ type: 'notificationcatcher' }],
       },

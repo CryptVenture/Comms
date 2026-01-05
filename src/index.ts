@@ -23,6 +23,7 @@ export type {
   WebpushRequest,
   SlackRequest,
   WhatsappRequest,
+  TelegramRequest,
   NotificationRequest,
   ChannelRequest,
   RequestMetadata,
@@ -35,6 +36,7 @@ export type { VoiceProvider } from './models/provider-voice'
 export type { WebpushProvider } from './models/provider-webpush'
 export type { SlackProvider } from './models/provider-slack'
 export type { WhatsappProvider } from './models/provider-whatsapp'
+export type { TelegramProvider } from './models/provider-telegram'
 
 export type {
   NotificationStatus,
@@ -109,6 +111,7 @@ export const CHANNELS = {
   webpush: 'webpush',
   slack: 'slack',
   whatsapp: 'whatsapp',
+  telegram: 'telegram',
 } as const
 
 /**
@@ -270,6 +273,11 @@ export default class CommsSdk {
               providers: [],
               multiProviderStrategy: 'fallback',
               ...(channels?.whatsapp || {}),
+            },
+            telegram: {
+              providers: [],
+              multiProviderStrategy: 'fallback',
+              ...(channels?.telegram || {}),
             },
             // Include any custom channels
             ...customChannelConfigs,

@@ -12,6 +12,7 @@ import voiceFactory from './voice'
 import webpushFactory from './webpush'
 import slackFactory from './slack'
 import whatsappFactory from './whatsapp'
+import telegramFactory from './telegram'
 import { ProviderError } from '../types/errors'
 import type { ChannelType } from '../types'
 import type {
@@ -22,6 +23,7 @@ import type {
   WebpushRequest,
   SlackRequest,
   WhatsappRequest,
+  TelegramRequest,
 } from '../models/notification-request'
 
 /**
@@ -35,6 +37,7 @@ export type RequestType =
   | WebpushRequest
   | SlackRequest
   | WhatsappRequest
+  | TelegramRequest
 
 /**
  * Channel configuration with providers
@@ -126,6 +129,9 @@ export default function factory(channels: ChannelOptionsType): ProvidersType {
 
               case 'whatsapp':
                 return whatsappFactory(config as never)
+
+              case 'telegram':
+                return telegramFactory(config as never)
 
               default:
                 // For custom channels, return the config as-is if it implements Provider
