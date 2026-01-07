@@ -16,7 +16,7 @@ importers:
         version: 7.0.6
       node-pushnotifications:
         specifier: ^4.0.3
-        version: 4.0.3(encoding@0.1.13)
+        version: 4.1.0(encoding@0.1.13)
       nodemailer:
         specifier: ^7.0.12
         version: 7.0.12
@@ -2705,8 +2705,8 @@ packages:
     resolution: {integrity: sha512-6Z3Ksmum3xsux/Ejwg2pn+yELvL13nIP5ZbdJDZupnipfP10xyPvJGt5jlB3pCrKkIzcTKL87OI0xsbbz8YkpA==}
     engines: {node: '>= 12'}
 
-  node-pushnotifications@4.0.3:
-    resolution: {integrity: sha512-/u1c4qbTJ+hSTCmvN9xkrnQiILL5i13tTt/Z1Ko7M2y/5cZJ4xhjr6J7+9hzqkoMfakWCT75MUo3MMcMtiClEQ==}
+  node-pushnotifications@4.1.0:
+    resolution: {integrity: sha512-SuVQqXvuRMtiocKTeCPjW7qPGsI/vefbh3i2xGGugvgnOHU47R/jKcOAW24lKZ+kAq3tYGPz6WeecfVWgFkTRA==}
     engines: {node: '>=14.x.x'}
 
   nodemailer-fetch@1.3.0:
@@ -7011,7 +7011,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  node-pushnotifications@4.0.3(encoding@0.1.13):
+  node-pushnotifications@4.1.0(encoding@0.1.13):
     dependencies:
       '@parse/node-apn': 7.0.1
       firebase-admin: 12.7.0(encoding@0.1.13)
