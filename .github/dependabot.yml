@@ -13,7 +13,7 @@ updates:
     schedule:
       interval: 'daily'
     commit-message:
-      prefix: fix
+      prefix: chore
       prefix-development: chore
       include: scope
     # Limit open PRs to avoid noise

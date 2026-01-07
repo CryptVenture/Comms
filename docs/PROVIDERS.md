@@ -1,6 +1,6 @@
 # Provider Configuration Guide
 
-Complete guide for configuring all notification providers in WebVentures Comms SDK v2.0.2.
+Complete guide for configuring all notification providers in WebVentures Comms SDK v2.0.5.
 
 ## Table of Contents
 
@@ -741,7 +741,7 @@ await comms.send({
         title: 'Production Deployment',
         fields: [
           { title: 'Environment', value: 'Production', short: true },
-          { title: 'Version', value: '2.0.2', short: true },
+          { title: 'Version', value: '2.0.5', short: true },
           { title: 'Duration', value: '5m 23s', short: true },
           { title: 'Status', value: 'Success', short: true },
         ],

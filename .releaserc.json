@@ -4,15 +4,36 @@
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
     [
+      "@semantic-release/changelog",
+      {
+        "changelogFile": "CHANGELOG.md"
+      }
+    ],
+    [
       "@semantic-release/npm",
       {
         "npmPublish": true
       }
     ],
     [
+      "@semantic-release/exec",
+      {
+        "prepareCmd": "node scripts/update-docs-version.js"
+      }
+    ],
+    [
       "@semantic-release/git",
       {
-        "assets": ["package.json"],
+        "assets": [
+          "package.json",
+          "CHANGELOG.md",
+          "docs/API.md",
+          "docs/ARCHITECTURE.md",
+          "docs/EXAMPLES.md",
+          "docs/FRAMEWORKS.md",
+          "docs/MIGRATION.md",
+          "docs/PROVIDERS.md"
+        ],
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
       }
     ],

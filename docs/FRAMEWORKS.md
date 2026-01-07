@@ -1,6 +1,6 @@
 # Framework Integration Guide
 
-Complete guides for integrating WebVentures Comms SDK v2.0.2 with popular frameworks.
+Complete guides for integrating WebVentures Comms SDK v2.0.5 with popular frameworks.
 
 ## Table of Contents
 

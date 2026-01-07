@@ -1,4 +1,10 @@
 import { defineConfig } from 'tsup'
+import { readFileSync } from 'fs'
+import { join } from 'path'
+
+// Read version from package.json dynamically
+const pkg = JSON.parse(readFileSync(join(__dirname, 'package.json'), 'utf-8'))
+const version = pkg.version
 
 export default defineConfig({
   entry: {
@@ -34,7 +40,7 @@ export default defineConfig({
   esbuildOptions(options) {
     options.banner = {
       js: `/**
- * @webventures/comms v2.0.2
+ * @webventures/comms v${version}
  * WebVentures Comms SDK - Unified Communication SDK
  * (c) 2025 WebVentures
  * @license MIT
