@@ -69,4 +69,6 @@ docFiles.forEach((file) => {
   }
 })
 
-console.log(`\n✓ Documentation updated: ${totalReplacements} version references updated to ${newVersion}`)
+console.log(
+  `\n✓ Documentation updated: ${totalReplacements} version references updated to ${newVersion}`
+)
