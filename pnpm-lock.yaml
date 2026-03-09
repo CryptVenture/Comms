@@ -19,7 +19,7 @@ importers:
         version: 5.0.1(encoding@0.1.13)
       nodemailer:
         specifier: ^8.0.0
-        version: 8.0.1
+        version: 8.0.2
       undici:
         specifier: ^7.16.0
         version: 7.22.0
@@ -2564,8 +2564,8 @@ packages:
   nodemailer-shared@1.1.0:
     resolution: {integrity: sha512-68xW5LSyPWv8R0GLm6veAvm7E+XFXkVgvE3FW0FGxNMMZqMkPFeGDVALfR1DPdSfcoO36PnW7q5AAOgFImEZGg==}
 
-  nodemailer@8.0.1:
-    resolution: {integrity: sha512-5kcldIXmaEjZcHR6F28IKGSgpmZHaF1IXLWFTG+Xh3S+Cce4MiakLtWY+PlBU69fLbRa8HlaGIrC/QolUpHkhg==}
+  nodemailer@8.0.2:
+    resolution: {integrity: sha512-zbj002pZAIkWQFxyAaqoxvn+zoIwRnS40hgjqTXudKOOJkiFFgBeNqjgD3/YCR12sZnrghWYBY+yP1ZucdDRpw==}
     engines: {node: '>=6.0.0'}
 
   nodemon@3.1.14:
@@ -6280,7 +6280,7 @@ snapshots:
     dependencies:
       nodemailer-fetch: 1.6.0
 
-  nodemailer@8.0.1: {}
+  nodemailer@8.0.2: {}
 
   nodemon@3.1.14:
     dependencies:
